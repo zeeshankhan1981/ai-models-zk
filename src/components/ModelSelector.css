@@ -1,0 +1,165 @@
+.model-selector {
+  position: relative;
+}
+
+.model-selector-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--button-shadow);
+  min-width: 180px;
+}
+
+.model-selector-button:hover {
+  border-color: var(--accent-primary);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.selected-model {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.model-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.model-capabilities {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.capability-badge {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  border-radius: 1rem;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: white;
+}
+
+.more-badge {
+  background-color: var(--text-tertiary);
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.model-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 280px;
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  z-index: 100;
+  box-shadow: var(--card-shadow);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.model-option {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.model-option:last-child {
+  border-bottom: none;
+}
+
+.model-option:hover {
+  background-color: var(--bg-secondary);
+}
+
+.model-option.selected {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.model-option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.model-option-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.model-option-description {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.model-option-capabilities {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+/* Capability badge colors */
+.capability-badge[data-capability="general"] {
+  background-color: #8b5cf6;
+}
+
+.capability-badge[data-capability="reasoning"] {
+  background-color: #10b981;
+}
+
+.capability-badge[data-capability="code"] {
+  background-color: #f59e0b;
+}
+
+.capability-badge[data-capability="math"] {
+  background-color: #ef4444;
+}
+
+.capability-badge[data-capability="writing"] {
+  background-color: #6366f1;
+}
+
+.capability-badge[data-capability="creative"] {
+  background-color: #ec4899;
+}
+
+.capability-badge[data-capability="analysis"] {
+  background-color: #0ea5e9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .model-dropdown {
+    width: 250px;
+    right: 0;
+    left: auto;
+  }
+}
