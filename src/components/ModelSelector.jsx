@@ -125,6 +125,9 @@ const ModelSelector = ({ models, selectedModel, onModelChange }) => {
                 <div className="model-option-content">
                   <div className="model-option-header">
                     <span className="model-option-name">{model.name}</span>
+                    <span className={`gpu-badge ${model.requiresGPU ? 'gpu-required' : 'cpu-only'}`}>
+                      {model.requiresGPU ? 'GPU' : 'CPU'}
+                    </span>
                   </div>
                   <p className="model-option-description">{model.description}</p>
                   <div className="model-option-capabilities">

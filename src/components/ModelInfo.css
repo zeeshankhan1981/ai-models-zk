@@ -49,6 +49,22 @@
   letter-spacing: -0.5px;
 }
 
+.model-info .gpu-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.75rem;
+  color: white;
+}
+
+.model-info .gpu-required {
+  background-color: #ef4444; /* Red for GPU */
+}
+
+.model-info .cpu-only {
+  background-color: #10b981; /* Green for CPU */
+}
+
 .model-info-description {
   font-size: 1rem;
   color: var(--text-secondary);
@@ -104,15 +120,6 @@
   font-size: 1rem;
   color: var(--text-primary);
   font-weight: 600;
-}
-
-.gpu-badge {
-  background-color: #ef4444;
-  color: white;
-  font-size: 0.7rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 500;
 }
 
 .endpoint-info {

@@ -113,6 +113,22 @@
   color: var(--text-primary);
 }
 
+.gpu-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.75rem;
+  color: white;
+}
+
+.gpu-required {
+  background-color: #ef4444; /* Red for GPU */
+}
+
+.cpu-only {
+  background-color: #10b981; /* Green for CPU */
+}
+
 .model-option-description {
   font-size: 0.8rem;
   color: var(--text-secondary);

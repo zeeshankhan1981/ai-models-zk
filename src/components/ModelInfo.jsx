@@ -41,6 +41,9 @@ const ModelInfo = ({ model }) => {
     >
       <div className="model-info-header">
         <h2 className="model-info-name">{model.name}</h2>
+        <span className={`gpu-badge ${model.requiresGPU ? 'gpu-required' : 'cpu-only'}`}>
+          {model.requiresGPU ? 'Requires GPU' : 'CPU Only'}
+        </span>
       </div>
       
       <p className="model-info-description">{model.description}</p>

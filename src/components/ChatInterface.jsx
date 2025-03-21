@@ -11,6 +11,8 @@ const ChatInterface = ({ selectedModel, models }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState('');
   const [useStreaming, setUseStreaming] = useState(true);
+  const [abortController, setAbortController] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   
@@ -33,6 +35,25 @@ const ChatInterface = ({ selectedModel, models }) => {
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
     }
   }, [input]);
+
+  // Load chat history from localStorage on component mount
+  useEffect(() => {
+    const savedMessages = localStorage.getItem(`chat_history_${selectedModel}`);
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (error) {
+        console.error('Error parsing saved messages:', error);
+      }
+    }
+  }, [selectedModel]);
+
+  // Save chat history to localStorage when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(`chat_history_${selectedModel}`, JSON.stringify(messages));
+    }
+  }, [messages, selectedModel]);
 
   const cleanModelResponse = (text) => {
     // Remove common formatting tokens from model responses
@@ -86,24 +107,30 @@ const ChatInterface = ({ selectedModel, models }) => {
         await getResponse(userMessage.content);
       }
     } catch (error) {
-      console.error('Error getting response:', error);
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: 'Sorry, there was an error processing your request. Please try again.',
-          timestamp: new Date().toISOString(),
-          model: currentModel.name
-        }
-      ]);
+      if (error.name !== 'AbortError') {
+        console.error('Error getting response:', error);
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: 'Sorry, there was an error processing your request. Please try again.',
+            timestamp: new Date().toISOString(),
+            model: currentModel.name
+          }
+        ]);
+      }
     } finally {
       setIsLoading(false);
       setStreamingResponse('');
+      setAbortController(null);
     }
   };
 
   const getResponse = async (prompt) => {
     try {
+      const controller = new AbortController();
+      setAbortController(controller);
+      
       const response = await fetch('http://localhost:3001/api/chat', {
         method: 'POST',
         headers: {
@@ -111,9 +138,9 @@ const ChatInterface = ({ selectedModel, models }) => {
         },
         body: JSON.stringify({
           model: selectedModel,
-          prompt: prompt,
-          systemPrompt: "You are a helpful, concise assistant. Keep your answers brief and to the point. Avoid unnecessary explanations or verbosity. If you're asked a simple question, provide a simple answer."
+          prompt: prompt
         }),
+        signal: controller.signal
       });
 
       if (!response.ok) {
@@ -140,6 +167,9 @@ const ChatInterface = ({ selectedModel, models }) => {
 
   const streamResponse = async (prompt) => {
     try {
+      const controller = new AbortController();
+      setAbortController(controller);
+      
       const response = await fetch('http://localhost:3001/api/chat/stream', {
         method: 'POST',
         headers: {
@@ -147,9 +177,9 @@ const ChatInterface = ({ selectedModel, models }) => {
         },
         body: JSON.stringify({
           model: selectedModel,
-          prompt: prompt,
-          systemPrompt: "You are a helpful, concise assistant. Keep your answers brief and to the point. Avoid unnecessary explanations or verbosity. If you're asked a simple question, provide a simple answer."
+          prompt: prompt
         }),
+        signal: controller.signal
       });
 
       if (!response.ok) {
@@ -188,9 +218,65 @@ const ChatInterface = ({ selectedModel, models }) => {
     }
   };
 
+  const stopResponse = () => {
+    if (abortController) {
+      abortController.abort();
+      
+      // If we have a partial response, save it
+      if (streamingResponse) {
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: streamingResponse,
+            timestamp: new Date().toISOString(),
+            model: currentModel.name,
+            stopped: true
+          }
+        ]);
+      }
+      
+      setStreamingResponse('');
+      setIsLoading(false);
+      setAbortController(null);
+    }
+  };
+
   const clearHistory = () => {
     setMessages([]);
     setStreamingResponse('');
+    localStorage.removeItem(`chat_history_${selectedModel}`);
+  };
+
+  const saveConversation = () => {
+    setIsSaving(true);
+    
+    try {
+      // Create a formatted conversation text
+      const conversationText = messages.map(msg => {
+        const role = msg.role === 'user' ? 'User' : `${msg.model || 'Assistant'}`;
+        return `${role}: ${msg.content}`;
+      }).join('\n\n');
+      
+      // Create a blob and download link
+      const blob = new Blob([conversationText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `conversation_${selectedModel}_${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setIsSaving(false);
+      }, 100);
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -216,6 +302,9 @@ const ChatInterface = ({ selectedModel, models }) => {
                     {message.role === 'user' ? 'You' : 'Assistant'}
                     {message.role === 'assistant' && message.model && (
                       <span className="model-badge">{message.model}</span>
+                    )}
+                    {message.stopped && (
+                      <span className="stopped-badge">Stopped</span>
                     )}
                   </span>
                 </div>
@@ -312,18 +401,34 @@ const ChatInterface = ({ selectedModel, models }) => {
               )}
             </AnimatePresence>
             
-            {messages.length > 1 && (
-              <motion.button 
-                className="clear-history-button"
-                onClick={clearHistory}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Clear History
-              </motion.button>
-            )}
+            <div className="chat-actions">
+              {messages.length > 1 && (
+                <motion.button 
+                  className="action-button clear-button"
+                  onClick={clearHistory}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Clear History
+                </motion.button>
+              )}
+              
+              {messages.length > 1 && (
+                <motion.button 
+                  className="action-button save-button"
+                  onClick={saveConversation}
+                  disabled={isSaving}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isSaving ? 'Saving...' : 'Save Conversation'}
+                </motion.button>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -362,16 +467,29 @@ const ChatInterface = ({ selectedModel, models }) => {
               {input.length}/{characterLimit}
             </span>
           </div>
-          <button
-            type="submit"
-            className="send-button"
-            disabled={isLoading || input.trim() === '' || input.length > characterLimit}
-          >
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+          
+          {isLoading && streamingResponse ? (
+            <button
+              type="button"
+              className="stop-button"
+              onClick={stopResponse}
+            >
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="6" y="6" width="12" height="12" fill="currentColor" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              type="submit"
+              className="send-button"
+              disabled={isLoading || input.trim() === '' || input.length > characterLimit}
+            >
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
         </form>
       </div>
     </div>
