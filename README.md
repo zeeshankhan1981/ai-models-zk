@@ -60,8 +60,8 @@ The application uses a RESTful API architecture with endpoints for:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/localmind.git
-   cd localmind
+   git clone https://github.com/zeeshankhan1981/ai-models-zk.git
+   cd ai-models-zk
    ```
 
 2. Install dependencies for both frontend and backend:
@@ -91,7 +91,7 @@ The application uses a RESTful API architecture with endpoints for:
 
 5. In a new terminal, start the frontend:
    ```bash
-   cd /path/to/localmind
+   cd /path/to/ai-models-zk
    npm run dev
    ```
 
@@ -101,13 +101,14 @@ The application uses a RESTful API architecture with endpoints for:
 
 | Model | Description | Capabilities | Requires GPU | Character Limit | Temperature |
 |-------|-------------|--------------|--------------|-----------------|-------------|
-| Mistral | Balanced model with good instruction following | General, Reasoning, Instruction | Yes | 1500 | 0.7 |
-| DeepSeek | Specialized for code generation | Code, Reasoning, Math | Yes | 1500 | 0.5 |
-| StarCoder2 | Advanced code generation | Code, Programming, Documentation | Yes | 1500 | 0.7 |
-| Zephyr | Balanced with creative capabilities | General, Reasoning, Creative | No | 1500 | 0.7 |
-| Phi-2 | Small but powerful general model | General, Instruction, Efficiency | No | 1500 | 0.7 |
-| WizardMath | Specialized for math problems | Math, Reasoning, Problem-solving | Yes | 1500 | 0.7 |
-| MetaMath | Advanced mathematical reasoning | Math, Reasoning, Formal-logic | Yes | 1500 | 0.7 |
+| Mistral | Balanced model with good instruction following | General, Reasoning, Instruction | Yes | 1000 | 0.7 |
+| DeepSeek | Specialized for code generation | Code, Reasoning, Math | Yes | 1000 | 0.5 |
+| StarCoder2 | Advanced code generation | Code, Programming, Documentation | Yes | 1000 | 0.7 |
+| Zephyr | Balanced with creative capabilities | General, Reasoning, Creative | No | 1000 | 0.7 |
+| Phi-2 | Small but powerful general model | General, Instruction, Efficiency | No | 1000 | 0.7 |
+| WizardMath | Specialized for math problems | Math, Reasoning, Problem-solving | Yes | 1000 | 0.7 |
+| MetaMath | Advanced mathematical reasoning | Math, Reasoning, Formal-logic | Yes | 1000 | 0.7 |
+| MythoMax-L2 | Creative storytelling and imagination | Creative, Storytelling, Reasoning | Yes | 1000 | 0.7 |
 
 ## GPU Acceleration
 
@@ -121,7 +122,7 @@ For optimal performance:
 ## Project Structure
 
 ```
-localmind/
+ai-models-zk/
 ├── public/                  # Static assets
 ├── server/                  # Backend API server
 │   ├── api.js               # API endpoints and model definitions
@@ -156,7 +157,7 @@ To add a new model:
      name: 'Model Name',
      description: 'Model description',
      capabilities: ['capability1', 'capability2'],
-     characterLimit: 1500,
+     characterLimit: 1000,
      temperature: 0.7,
      requiresGPU: true/false,
      systemPrompt: "Custom system prompt for this model"
