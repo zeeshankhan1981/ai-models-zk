@@ -41,9 +41,15 @@ const ChatInterface = ({ selectedModel, models }) => {
     const savedMessages = localStorage.getItem(`chat_history_${selectedModel}`);
     if (savedMessages) {
       try {
-        setMessages(JSON.parse(savedMessages));
+        const parsedMessages = JSON.parse(savedMessages);
+        // Only set messages if there's actual content
+        if (parsedMessages && parsedMessages.length > 0) {
+          setMessages(parsedMessages);
+        }
       } catch (error) {
         console.error('Error parsing saved messages:', error);
+        // If there's an error parsing, clear the corrupted storage
+        localStorage.removeItem(`chat_history_${selectedModel}`);
       }
     }
   }, [selectedModel]);
@@ -51,7 +57,11 @@ const ChatInterface = ({ selectedModel, models }) => {
   // Save chat history to localStorage when messages change
   useEffect(() => {
     if (messages.length > 0) {
-      localStorage.setItem(`chat_history_${selectedModel}`, JSON.stringify(messages));
+      try {
+        localStorage.setItem(`chat_history_${selectedModel}`, JSON.stringify(messages));
+      } catch (error) {
+        console.error('Error saving messages to localStorage:', error);
+      }
     }
   }, [messages, selectedModel]);
 
@@ -243,9 +253,21 @@ const ChatInterface = ({ selectedModel, models }) => {
   };
 
   const clearHistory = () => {
+    // Clear messages from state
     setMessages([]);
+    
+    // Clear any streaming response
     setStreamingResponse('');
+    
+    // Clear from localStorage
     localStorage.removeItem(`chat_history_${selectedModel}`);
+    
+    // Reset any loading or streaming states
+    setIsLoading(false);
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+    }
   };
 
   const saveConversation = () => {
@@ -403,30 +425,48 @@ const ChatInterface = ({ selectedModel, models }) => {
             
             <div className="chat-actions">
               {messages.length > 1 && (
-                <motion.button 
-                  className="action-button clear-button"
-                  onClick={clearHistory}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Clear History
-                </motion.button>
-              )}
-              
-              {messages.length > 1 && (
-                <motion.button 
-                  className="action-button save-button"
-                  onClick={saveConversation}
-                  disabled={isSaving}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {isSaving ? 'Saving...' : 'Save Conversation'}
-                </motion.button>
+                <>
+                  <motion.div
+                    className="action-button streaming-toggle-container"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    title="When enabled, responses appear word by word in real-time. When disabled, responses appear all at once after completion."
+                  >
+                    <label className="streaming-toggle">
+                      <input
+                        type="checkbox"
+                        checked={useStreaming}
+                        onChange={() => setUseStreaming(!useStreaming)}
+                      />
+                      <span className="toggle-label">Streaming</span>
+                    </label>
+                  </motion.div>
+                  
+                  <motion.button 
+                    className="action-button save-button"
+                    onClick={saveConversation}
+                    disabled={isSaving}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Save this conversation as a text file"
+                  >
+                    {isSaving ? 'Saving...' : 'Save Conversation'}
+                  </motion.button>
+                  
+                  <motion.button 
+                    className="action-button clear-button"
+                    onClick={clearHistory}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Clear the current conversation history"
+                  >
+                    Clear History
+                  </motion.button>
+                </>
               )}
             </div>
           </>
@@ -455,14 +495,6 @@ const ChatInterface = ({ selectedModel, models }) => {
             </button>
           )}
           <div className="chat-options">
-            <label className="streaming-toggle">
-              <input
-                type="checkbox"
-                checked={useStreaming}
-                onChange={() => setUseStreaming(!useStreaming)}
-              />
-              <span className="toggle-label">Streaming</span>
-            </label>
             <span className={`character-count ${input.length >= characterLimit ? 'limit-reached' : ''}`}>
               {input.length}/{characterLimit}
             </span>

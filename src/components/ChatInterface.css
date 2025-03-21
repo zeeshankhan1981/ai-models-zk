@@ -181,7 +181,13 @@
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  background-color: var(--bg-secondary);
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  box-shadow: var(--card-shadow);
 }
 
 .action-button {
@@ -191,6 +197,7 @@
   font-size: 0.875rem;
   transition: all 0.2s ease;
   border: 1px solid var(--border-color);
+  font-weight: 500;
 }
 
 .clear-button {
@@ -237,6 +244,37 @@
   background-color: #f87171;
   color: white;
   border-color: #f87171;
+}
+
+.streaming-toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.streaming-toggle-container:hover {
+  background-color: var(--bg-hover);
+}
+
+.streaming-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.streaming-toggle input {
+  margin: 0;
+  cursor: pointer;
+}
+
+.toggle-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  user-select: none;
 }
 
 .chat-input-container {
@@ -311,19 +349,6 @@
   bottom: -1.5rem;
 }
 
-.streaming-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-
-.streaming-toggle input {
-  margin: 0;
-}
-
 .character-count {
   font-size: 0.75rem;
   color: var(--text-tertiary);
@@ -392,6 +417,27 @@
 .stop-button svg {
   width: 1rem;
   height: 1rem;
+}
+
+.update-indicator {
+  background-color: #ff5722;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
 }
 
 /* Animation keyframes */

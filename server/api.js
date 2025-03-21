@@ -18,9 +18,12 @@ const models = [
     description: 'A balanced model with good instruction following capabilities',
     capabilities: ['general', 'reasoning', 'instruction'],
     characterLimit: 1500,
-    temperature: 0.7,
+    temperature: 0.4,
+    top_p: 0.8,
+    top_k: 30,
+    num_predict: 256,
     requiresGPU: true,
-    systemPrompt: "You are a helpful, concise assistant. Keep your answers brief and to the point. Avoid unnecessary explanations or verbosity. If you're asked a simple question, provide a simple answer."
+    systemPrompt: "You are a helpful, direct assistant. Provide brief, accurate answers without unnecessary elaboration. For simple questions, give simple, one-sentence answers. For complex questions, be concise but thorough. Never list additional questions or tangential information. Stick strictly to answering what was asked. If unsure, say 'I don't know' rather than guessing."
   },
   {
     id: 'deepseek',
@@ -28,9 +31,12 @@ const models = [
     description: 'Specialized for code generation and understanding',
     capabilities: ['code', 'reasoning', 'math'],
     characterLimit: 1500,
-    temperature: 0.5,
+    temperature: 0.3,
+    top_p: 0.9,
+    top_k: 30,
+    num_predict: 256,
     requiresGPU: true,
-    systemPrompt: "You are DeepSeek, a helpful and precise assistant specialized in coding and technical topics. Always provide accurate, relevant, and focused responses. Keep your answers concise and on-topic. For code questions, provide clean, well-commented code examples. For technical explanations, be clear and accurate. Avoid hallucinations or making up information. If you're unsure about something, admit it rather than guessing."
+    systemPrompt: "You are DeepSeek, a coding assistant. Provide direct, practical code solutions with minimal explanation. Include only essential comments. For technical questions, give concise, factual answers. Never elaborate beyond what's necessary. If unsure, admit uncertainty rather than guessing."
   },
   {
     id: 'starcoder2',
@@ -38,9 +44,12 @@ const models = [
     description: 'Advanced code generation and completion',
     capabilities: ['code', 'programming', 'documentation'],
     characterLimit: 1500,
-    temperature: 0.7,
+    temperature: 0.3,
+    top_p: 0.9,
+    top_k: 30,
+    num_predict: 256,
     requiresGPU: true,
-    systemPrompt: "You are StarCoder2, an expert coding assistant. Focus on providing clean, efficient, and well-structured code. Include helpful comments and explain your approach briefly. Keep responses concise and focused on the coding task at hand."
+    systemPrompt: "You are StarCoder2, a coding assistant. Provide clean, efficient code with minimal explanation. Include only essential comments. Focus exclusively on the coding task requested. Never add tangential information or suggestions unless specifically asked. If unsure about any aspect, clearly state your uncertainty."
   },
   {
     id: 'zephyr',
@@ -48,9 +57,12 @@ const models = [
     description: 'A balanced model with good instruction following capabilities',
     capabilities: ['general', 'reasoning', 'creative'],
     characterLimit: 1500,
-    temperature: 0.7,
+    temperature: 0.5,
+    top_p: 0.8,
+    top_k: 30,
+    num_predict: 256,
     requiresGPU: false,
-    systemPrompt: "You are Zephyr, a helpful and creative assistant. Provide thoughtful and balanced responses. Keep your answers concise but insightful. Focus on being helpful while avoiding unnecessary verbosity."
+    systemPrompt: "You are Zephyr, a helpful assistant. Provide direct, concise answers. For simple questions, give one-sentence responses. For complex topics, be brief but informative. Never add unnecessary details or tangential information. Answer exactly what was asked and nothing more. If unsure, simply state that you don't know."
   },
   {
     id: 'phi2',
@@ -58,9 +70,12 @@ const models = [
     description: 'A small but powerful model for general tasks',
     capabilities: ['general', 'instruction', 'efficiency'],
     characterLimit: 1500,
-    temperature: 0.7,
+    temperature: 0.5,
+    top_p: 0.8,
+    top_k: 30,
+    num_predict: 256,
     requiresGPU: false,
-    systemPrompt: "You are Phi-2, a compact but powerful assistant. Provide concise, accurate responses without unnecessary details. Be direct and to the point while remaining helpful and friendly."
+    systemPrompt: "You are Phi-2, a direct assistant. Give brief, accurate answers. For simple questions, provide one-sentence responses. Never elaborate unless specifically asked. Focus only on answering exactly what was asked. If you don't know something, say so directly without speculation."
   },
   {
     id: 'wizardmath',
@@ -68,19 +83,25 @@ const models = [
     description: 'Specialized for mathematical problem solving',
     capabilities: ['math', 'reasoning', 'problem-solving'],
     characterLimit: 1500,
-    temperature: 0.7,
+    temperature: 0.3,
+    top_p: 0.9,
+    top_k: 30,
+    num_predict: 256,
     requiresGPU: true,
-    systemPrompt: "You are WizardMath, a specialized mathematics assistant. Focus on providing clear, step-by-step solutions to math problems. Be precise with mathematical notation and explanations. Verify your calculations before providing answers."
+    systemPrompt: "You are WizardMath, a math assistant. Provide clear, concise solutions to math problems. Show key steps but avoid unnecessary explanations. Give direct answers with minimal elaboration. For simple questions, provide just the answer. For complex problems, include only essential steps. Never add tangential information."
   },
   {
     id: 'metamath',
     name: 'MetaMath',
     description: 'Specialized for advanced mathematical reasoning and formal proofs',
-    capabilities: ['math', 'reasoning', 'formal-logic'],
     characterLimit: 1500,
-    temperature: 0.7,
+    temperature: 0.3,
+    top_p: 0.9,
+    top_k: 30,
+    num_predict: 256,
+    capabilities: ['math', 'reasoning', 'formal-logic'],
     requiresGPU: true,
-    systemPrompt: "You are MetaMath, an expert in advanced mathematics and formal logic. Provide rigorous, well-structured mathematical proofs and explanations. Be precise with mathematical notation and reasoning. Focus on clarity and correctness in all mathematical discussions."
+    systemPrompt: "You are MetaMath, a mathematics assistant. Provide precise, concise mathematical explanations and proofs. Include only essential steps and notation. For simple questions, give direct answers without elaboration. For complex proofs, include only necessary steps. Never add tangential information or unnecessary context."
   }
 ];
 
@@ -120,7 +141,7 @@ app.post('/api/chat', async (req, res) => {
     
     // Find the selected model
     const selectedModel = models.find(m => m.id === model);
-    const defaultSystemPrompt = "You are a helpful, concise assistant. Keep your answers brief and to the point. Avoid unnecessary explanations or verbosity. If you're asked a simple question, provide a simple answer.";
+    const defaultSystemPrompt = "You are a helpful, concise assistant. Keep your answers brief and to the point. Avoid unnecessary explanations or verbosity. If you're asked a simple question, provide a simple answer. Always verify facts before stating them and avoid making up information.";
     
     const response = await axios.post(`${OLLAMA_API}/chat`, {
       model: model,
@@ -130,6 +151,9 @@ app.post('/api/chat', async (req, res) => {
       ],
       options: {
         temperature: selectedModel?.temperature || 0.7,
+        top_p: selectedModel?.top_p || 0.9,
+        top_k: selectedModel?.top_k || 40,
+        num_predict: selectedModel?.num_predict || 512
       }
     });
     
@@ -144,48 +168,65 @@ app.post('/api/chat', async (req, res) => {
 // Streaming chat endpoint
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { model, prompt, systemPrompt } = req.body;
+    const { model, prompt } = req.body;
     
-    if (!model || !prompt) {
-      return res.status(400).json({ error: 'Model and prompt are required' });
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
     }
     
-    // Find the selected model
     const selectedModel = models.find(m => m.id === model);
-    const defaultSystemPrompt = "You are a helpful, concise assistant. Keep your answers brief and to the point. Avoid unnecessary explanations or verbosity. If you're asked a simple question, provide a simple answer.";
     
+    if (!selectedModel) {
+      return res.status(404).json({ error: 'Model not found' });
+    }
+    
+    // Set up headers for streaming response
     res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
     
-    const response = await axios.post(`${OLLAMA_API}/chat`, {
-      model: model,
-      messages: [
-        { role: 'system', content: systemPrompt || selectedModel?.systemPrompt || defaultSystemPrompt },
-        { role: 'user', content: prompt }
-      ],
+    const response = await axios.post(`${OLLAMA_API}/generate`, {
+      model: selectedModel.id,
+      prompt: prompt,
+      system: selectedModel.systemPrompt,
       options: {
         temperature: selectedModel?.temperature || 0.7,
-      },
-      stream: true
+        top_p: selectedModel?.top_p || 0.9,
+        top_k: selectedModel?.top_k || 40,
+        num_predict: selectedModel?.num_predict || 512,
+        stream: true
+      }
     }, {
       responseType: 'stream'
     });
     
+    // Stream the response to the client
     response.data.on('data', (chunk) => {
       try {
-        const lines = chunk.toString().split('\n');
+        const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
+        
         for (const line of lines) {
-          if (line.trim() === '') continue;
-          
-          const data = JSON.parse(line);
-          if (data.message?.content) {
-            res.write(data.message.content);
+          try {
+            const data = JSON.parse(line);
+            
+            if (data.response) {
+              res.write(data.response);
+            }
+            
+            // If done, end the response
+            if (data.done) {
+              return res.end();
+            }
+          } catch (parseError) {
+            console.error('Error parsing JSON line:', parseError);
           }
         }
-      } catch (error) {
-        console.error('Error parsing streaming chunk:', error);
+      } catch (streamError) {
+        console.error('Error processing stream chunk:', streamError);
       }
     });
     
+    // Handle errors and completion
     response.data.on('end', () => {
       res.end();
     });
@@ -194,9 +235,20 @@ app.post('/api/chat/stream', async (req, res) => {
       console.error('Stream error:', error);
       res.end();
     });
+    
+    // Handle client disconnect
+    req.on('close', () => {
+      response.data.destroy();
+    });
+    
   } catch (error) {
-    console.error('Error in streaming chat endpoint:', error);
-    res.status(500).json({ error: 'Failed to get streaming response from model' });
+    console.error('Error in streaming chat:', error);
+    
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Error generating streaming response' });
+    } else {
+      res.end();
+    }
   }
 });
 
