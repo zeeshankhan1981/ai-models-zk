@@ -188,8 +188,8 @@ body {
 
 /* Model Info Container */
 .model-info-container {
-  padding: 1.25rem 2rem;
-  background-color: var(--bg-secondary);
+  padding: 0.75rem 2rem;
+  background-color: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
   box-shadow: var(--header-shadow);
 }
