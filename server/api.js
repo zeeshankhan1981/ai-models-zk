@@ -17,7 +17,7 @@ const models = [
     name: 'Mistral',
     description: 'A balanced model with good instruction following capabilities',
     capabilities: ['general', 'reasoning', 'instruction'],
-    characterLimit: 1500,
+    characterLimit: 1000,
     temperature: 0.7,
     requiresGPU: true,
     systemPrompt: "You are a helpful, concise assistant. Keep your answers brief and to the point. Avoid unnecessary explanations or verbosity. If you're asked a simple question, provide a simple answer."
@@ -27,7 +27,7 @@ const models = [
     name: 'DeepSeek',
     description: 'Specialized for code generation and understanding',
     capabilities: ['code', 'reasoning', 'math'],
-    characterLimit: 1500,
+    characterLimit: 1000,
     temperature: 0.5,
     requiresGPU: true,
     systemPrompt: "You are DeepSeek, a helpful and precise assistant specialized in coding and technical topics. Always provide accurate, relevant, and focused responses. Keep your answers concise and on-topic. For code questions, provide clean, well-commented code examples. For technical explanations, be clear and accurate. Avoid hallucinations or making up information. If you're unsure about something, admit it rather than guessing."
@@ -37,7 +37,7 @@ const models = [
     name: 'StarCoder2',
     description: 'Advanced code generation and completion',
     capabilities: ['code', 'programming', 'documentation'],
-    characterLimit: 1500,
+    characterLimit: 1000,
     temperature: 0.7,
     requiresGPU: true,
     systemPrompt: "You are StarCoder2, an expert coding assistant. Focus on providing clean, efficient, and well-structured code. Include helpful comments and explain your approach briefly. Keep responses concise and focused on the coding task at hand."
@@ -47,7 +47,7 @@ const models = [
     name: 'Zephyr',
     description: 'A balanced model with good instruction following capabilities',
     capabilities: ['general', 'reasoning', 'creative'],
-    characterLimit: 1500,
+    characterLimit: 1000,
     temperature: 0.7,
     requiresGPU: false,
     systemPrompt: "You are Zephyr, a helpful and creative assistant. Provide thoughtful and balanced responses. Keep your answers concise but insightful. Focus on being helpful while avoiding unnecessary verbosity."
@@ -57,7 +57,7 @@ const models = [
     name: 'Phi-2',
     description: 'A small but powerful model for general tasks',
     capabilities: ['general', 'instruction', 'efficiency'],
-    characterLimit: 1500,
+    characterLimit: 1000,
     temperature: 0.7,
     requiresGPU: false,
     systemPrompt: "You are Phi-2, a compact but powerful assistant. Provide concise, accurate responses without unnecessary details. Be direct and to the point while remaining helpful and friendly."
@@ -67,7 +67,7 @@ const models = [
     name: 'WizardMath',
     description: 'Specialized for mathematical problem solving',
     capabilities: ['math', 'reasoning', 'problem-solving'],
-    characterLimit: 1500,
+    characterLimit: 1000,
     temperature: 0.7,
     requiresGPU: true,
     systemPrompt: "You are WizardMath, a specialized mathematics assistant. Focus on providing clear, step-by-step solutions to math problems. Be precise with mathematical notation and explanations. Verify your calculations before providing answers."
@@ -77,10 +77,20 @@ const models = [
     name: 'MetaMath',
     description: 'Specialized for advanced mathematical reasoning and formal proofs',
     capabilities: ['math', 'reasoning', 'formal-logic'],
-    characterLimit: 1500,
+    characterLimit: 1000,
     temperature: 0.7,
     requiresGPU: true,
     systemPrompt: "You are MetaMath, an expert in advanced mathematics and formal logic. Provide rigorous, well-structured mathematical proofs and explanations. Be precise with mathematical notation and reasoning. Focus on clarity and correctness in all mathematical discussions."
+  },
+  {
+    id: 'mythomaxl2',
+    name: 'MythoMax-L2',
+    description: 'Creative model with excellent storytelling and imaginative capabilities',
+    capabilities: ['creative', 'storytelling', 'reasoning'],
+    characterLimit: 1000,
+    temperature: 0.7,
+    requiresGPU: true,
+    systemPrompt: "You are MythoMax-L2, a creative and imaginative AI assistant with a flair for storytelling and creative writing. You excel at generating rich, detailed content with mythological and fantastical elements. You're also capable of general reasoning, problem-solving, and providing helpful information across a wide range of topics."
   }
 ];
 
