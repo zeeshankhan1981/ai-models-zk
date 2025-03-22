@@ -10,6 +10,11 @@ All notable changes to the AverroesMind Multi-Model LLM Playground will be docum
 - Added animated indicators to show active model during generation
 - Improved responsive design for mobile and tablet devices
 
+## [v2.9.1] - 2025-03-22
+
+### UI Changes
+- Removed the model chain flow indicator from the ModelChainPanel component for a cleaner interface
+
 ## [v2.9] - 2025-03-22
 
 ### Added

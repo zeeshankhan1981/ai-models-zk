@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import './ModelChainPanel.css';
 
 const ModelChainPanel = () => {
@@ -12,6 +12,7 @@ const ModelChainPanel = () => {
   const [characterCount, setCharacterCount] = useState(0);
   const [history, setHistory] = useState([]);
   const [activeModelIndex, setActiveModelIndex] = useState(-1);
+  const [showModelDetails, setShowModelDetails] = useState(null);
   const CHARACTER_LIMIT = 200;
   
   const messagesEndRef = useRef(null);
@@ -19,10 +20,38 @@ const ModelChainPanel = () => {
 
   // Model chain configuration
   const modelChain = [
-    { id: 'gemma', name: 'Gemma 2B', role: 'Ideas', description: 'Generates initial angles and ideas' },
-    { id: 'mistral', name: 'Mistral', role: 'Structure', description: 'Creates logical outline and structure' },
-    { id: 'zephyr', name: 'Zephyr 7B', role: 'Draft', description: 'Transforms outline into engaging prose' },
-    { id: 'llama3', name: 'LLaMA 3', role: 'Polish', description: 'Expands and refines into final article' }
+    { 
+      id: 'gemma', 
+      name: 'Gemma 2B', 
+      role: 'Ideas', 
+      description: 'Generates initial angles and ideas',
+      icon: '💡',
+      color: '#4285F4' // Google blue
+    },
+    { 
+      id: 'mistral', 
+      name: 'Mistral', 
+      role: 'Structure', 
+      description: 'Creates logical outline and structure',
+      icon: '🏗️',
+      color: '#5E35B1' // Deep purple
+    },
+    { 
+      id: 'zephyr', 
+      name: 'Zephyr 7B', 
+      role: 'Draft', 
+      description: 'Transforms outline into engaging prose',
+      icon: '✏️',
+      color: '#00796B' // Teal
+    },
+    { 
+      id: 'llama3', 
+      name: 'LLaMA 3', 
+      role: 'Polish', 
+      description: 'Expands and refines into final article',
+      icon: '✨',
+      color: '#FB8C00' // Orange
+    }
   ];
 
   // Load history from localStorage
@@ -97,6 +126,18 @@ const ModelChainPanel = () => {
     console.log('Sending request to model chain endpoint with topic:', topic);
 
     try {
+      // Simulate the progress through each model for UI demonstration
+      // In a real implementation, you would get this data from the API response
+      const simulateModelProgress = async () => {
+        for (let i = 0; i < modelChain.length; i++) {
+          setActiveModelIndex(i);
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate model processing time
+        }
+      };
+
+      // Start the simulation in parallel with the actual API call
+      simulateModelProgress();
+
       // Use the same base URL pattern as the ChatInterface component (with full URL)
       const response = await axios.post('http://localhost:3001/api/chain/gemma-mistral-zephyr-llama3', { topic });
       console.log('Received response:', response.data);
@@ -127,6 +168,7 @@ const ModelChainPanel = () => {
     setFinalOutput('');
     setError('');
     setActiveModelIndex(-1);
+    setShowModelDetails(null);
   };
 
   // Determine if a model has output
@@ -146,71 +188,62 @@ const ModelChainPanel = () => {
     return 'pending';
   };
 
+  // Toggle model details popup
+  const toggleModelDetails = (index) => {
+    if (showModelDetails === index) {
+      setShowModelDetails(null);
+    } else {
+      setShowModelDetails(index);
+    }
+  };
+
   return (
     <div className="chat-container">
-      {/* Model Chain Flow Indicator */}
-      <div className="model-chain-flow">
-        <h3>AI Model Chain</h3>
-        <p className="chain-description">Generating high-quality content through a 4-model deterministic process</p>
-        
-        <div className="chain-flow-container">
-          {modelChain.map((model, index) => (
-            <React.Fragment key={model.id}>
-              {/* Model node */}
-              <div className={`chain-model ${getModelStatus(index)}`}>
-                <div className="model-icon">{index + 1}</div>
-                <div className="model-info">
-                  <div className="model-name">{model.name}</div>
-                  <div className="model-role">{model.role}</div>
-                </div>
-                {getModelStatus(index) === 'complete' && (
-                  <div className="status-icon">✓</div>
-                )}
-                {getModelStatus(index) === 'active' && (
-                  <div className="status-icon pulsing">●</div>
-                )}
-              </div>
-              
-              {/* Connector line between models */}
-              {index < modelChain.length - 1 && (
-                <div className={`chain-connector ${
-                  getModelStatus(index) === 'complete' ? 'complete' : 
-                  getModelStatus(index) === 'active' ? 'active' : 'pending'
-                }`}>
-                  <div className="connector-line"></div>
-                  <div className="connector-arrow">→</div>
-                </div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-
       <div className="chat-messages" ref={chatContainerRef}>
         {!finalOutput && !outputs.gemma && !isGenerating ? (
-          <div className="empty-chat">
+          <motion.div 
+            className="empty-chat"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
             <h3>Generate an Article</h3>
             <p>Enter a topic below to generate a comprehensive article using our AI model chain</p>
-          </div>
+            <div className="model-chain-illustration">
+              {modelChain.map((model, index) => (
+                <div key={model.id} className="illustration-model">
+                  <div className="illustration-icon" style={{ backgroundColor: model.color }}>
+                    {model.icon}
+                  </div>
+                  <div className="illustration-label">{model.role}</div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         ) : (
           <>
             {error && (
-              <div className="error-message">
+              <motion.div 
+                className="error-message"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+              >
                 <h3>Error</h3>
                 <p>{error}</p>
-              </div>
+              </motion.div>
             )}
             
             {outputs.gemma && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
                 className="message assistant-message"
               >
                 <div className="message-header">
                   <div className="message-role">
-                    Gemma <span className="model-badge">Ideas Generation</span>
+                    <span className="model-emoji">{modelChain[0].icon}</span> Gemma <span className="model-badge">Ideas Generation</span>
                   </div>
                 </div>
                 <div className="message-content">
@@ -221,14 +254,14 @@ const ModelChainPanel = () => {
             
             {outputs.mistral && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
                 className="message assistant-message"
               >
                 <div className="message-header">
                   <div className="message-role">
-                    Mistral <span className="model-badge">Outline Creation</span>
+                    <span className="model-emoji">{modelChain[1].icon}</span> Mistral <span className="model-badge">Outline Creation</span>
                   </div>
                 </div>
                 <div className="message-content">
@@ -239,14 +272,14 @@ const ModelChainPanel = () => {
             
             {outputs.zephyr && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
                 className="message assistant-message"
               >
                 <div className="message-header">
                   <div className="message-role">
-                    Zephyr <span className="model-badge">Draft Writing</span>
+                    <span className="model-emoji">{modelChain[2].icon}</span> Zephyr <span className="model-badge">Draft Writing</span>
                   </div>
                 </div>
                 <div className="message-content">
@@ -257,14 +290,14 @@ const ModelChainPanel = () => {
             
             {finalOutput && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="message assistant-message"
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="message assistant-message final-output"
               >
                 <div className="message-header">
                   <div className="message-role">
-                    LLaMA 3 <span className="model-badge">Final Article</span>
+                    <span className="model-emoji">{modelChain[3].icon}</span> LLaMA 3 <span className="model-badge">Final Article</span>
                   </div>
                 </div>
                 <div className="message-content">
@@ -288,9 +321,21 @@ const ModelChainPanel = () => {
             style={{ height: 'auto', minHeight: '24px', maxHeight: '150px' }}
           />
           
-          <button type="submit" className="send-button" disabled={!topic.trim() || characterCount > CHARACTER_LIMIT || isGenerating}>
-            {isGenerating ? 'Generating...' : 'Generate Article'}
-          </button>
+          <motion.button 
+            type="submit" 
+            className="send-button" 
+            disabled={!topic.trim() || characterCount > CHARACTER_LIMIT || isGenerating}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {isGenerating ? (
+              <span className="generating-text">
+                <span className="dot-animation">Generating</span>
+              </span>
+            ) : (
+              'Generate Article'
+            )}
+          </motion.button>
         </form>
         
         <div className="chat-options">
@@ -299,26 +344,46 @@ const ModelChainPanel = () => {
           </span>
           
           <div className="action-buttons">
-            <button 
+            <motion.button 
               className="action-button" 
               onClick={exportArticle}
               disabled={!finalOutput}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               Save Article
-            </button>
+            </motion.button>
             
-            <button 
+            <motion.button 
               className="action-button clear-button" 
               onClick={clearArticle}
               disabled={!finalOutput && !outputs.gemma}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               Clear Article
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+// Helper function to adjust color brightness
+function adjustColor(hex, percent) {
+  // Convert hex to RGB
+  let r = parseInt(hex.substring(1, 3), 16);
+  let g = parseInt(hex.substring(3, 5), 16);
+  let b = parseInt(hex.substring(5, 7), 16);
+
+  // Adjust brightness
+  r = Math.max(0, Math.min(255, r + percent));
+  g = Math.max(0, Math.min(255, g + percent));
+  b = Math.max(0, Math.min(255, b + percent));
+
+  // Convert back to hex
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
 
 export default ModelChainPanel;
