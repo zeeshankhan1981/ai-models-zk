@@ -222,98 +222,140 @@ const ModelChainPanel = () => {
     // Close any existing event source
     if (eventSource) {
       eventSource.close();
+      setEventSource(null);
     }
     
     try {
       // Create a new event source for SSE
       const sse = new EventSource(`http://localhost:3001/api/chain/stream?topic=${encodeURIComponent(topic)}`);
-      setEventSource(sse);
+      
+      // Store the request ID for cancellation
+      let currentRequestId = null;
       
       // Handle different event types
+      sse.addEventListener('requestId', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          currentRequestId = data.requestId;
+          console.log('Received request ID:', currentRequestId);
+          
+          // Store the request ID in the event source object for cancellation
+          sse.requestId = currentRequestId;
+        } catch (e) {
+          console.error('Error parsing requestId event:', e);
+        }
+      });
+      
       sse.addEventListener('modelStart', (event) => {
-        const data = JSON.parse(event.data);
-        console.log('Model started:', data);
-        setActiveStage(data.stage);
-        
-        // Update progress based on which model is starting
-        const stageIndex = modelChain.findIndex(model => model.stage === data.stage);
-        if (stageIndex !== -1) {
-          setActiveModelIndex(stageIndex);
-          setProgress((stageIndex / (modelChain.length - 1)) * 100);
+        try {
+          const data = JSON.parse(event.data);
+          console.log('Model started:', data);
+          setActiveStage(data.stage);
+          
+          // Update progress based on which model is starting
+          const stageIndex = modelChain.findIndex(model => model.stage === data.stage);
+          if (stageIndex !== -1) {
+            setActiveModelIndex(stageIndex);
+            setProgress((stageIndex / (modelChain.length - 1)) * 100);
+          }
+        } catch (e) {
+          console.error('Error parsing modelStart event:', e);
         }
       });
       
       sse.addEventListener('modelComplete', (event) => {
-        const data = JSON.parse(event.data);
-        console.log('Model completed:', data);
-        
-        // Update the appropriate output based on the stage
-        setOutputs(prev => {
-          const newOutputs = { ...prev };
+        try {
+          const data = JSON.parse(event.data);
+          console.log('Model completed:', data);
           
-          switch (data.stage) {
-            case 'ideas':
-              newOutputs.gemma = data.output;
-              break;
-            case 'outline':
-              newOutputs.mistral = data.output;
-              break;
-            case 'draft':
-              newOutputs.zephyr = data.output;
-              break;
-            case 'final':
-              newOutputs.llama3 = data.output;
-              setFinalOutput(data.output);
-              if (data.qualityCheck) {
-                setQualityCheck(data.qualityCheck);
-              }
-              break;
-            default:
-              break;
-          }
+          // Update the appropriate output based on the stage
+          setOutputs(prev => {
+            const newOutputs = { ...prev };
+            
+            switch (data.stage) {
+              case 'ideas':
+                newOutputs.gemma = data.output;
+                break;
+              case 'outline':
+                newOutputs.mistral = data.output;
+                break;
+              case 'draft':
+                newOutputs.zephyr = data.output;
+                break;
+              case 'final':
+                newOutputs.llama3 = data.output;
+                setFinalOutput(data.output);
+                if (data.qualityCheck) {
+                  setQualityCheck(data.qualityCheck);
+                }
+                break;
+              default:
+                break;
+            }
+            
+            return newOutputs;
+          });
           
-          return newOutputs;
-        });
-        
-        // Mark this stage as completed
-        setCompletedStages(prev => [...prev, data.stage]);
+          // Mark this stage as completed
+          setCompletedStages(prev => [...prev, data.stage]);
+        } catch (e) {
+          console.error('Error parsing modelComplete event:', e);
+        }
       });
       
       sse.addEventListener('complete', (event) => {
-        const data = JSON.parse(event.data);
-        console.log('Generation complete:', data);
-        
-        // Ensure all outputs are set
-        setOutputs(data.stages);
-        setFinalOutput(data.finalOutput);
-        if (data.qualityCheck) {
-          setQualityCheck(data.qualityCheck);
+        try {
+          const data = JSON.parse(event.data);
+          console.log('Generation complete:', data);
+          
+          // Ensure all outputs are set
+          setOutputs(data.stages);
+          setFinalOutput(data.finalOutput);
+          if (data.qualityCheck) {
+            setQualityCheck(data.qualityCheck);
+          }
+          
+          // Reset states
+          setActiveModelIndex(-1);
+          setActiveStage(null);
+          setProgress(100);
+          
+          // Save to history
+          saveHistory({
+            topic,
+            timestamp: new Date().toISOString(),
+            outputs: data.stages,
+            finalOutput: data.finalOutput,
+            wordCount: data.finalOutput.trim().split(/\s+/).length
+          });
+          
+          // Close the event source
+          sse.close();
+          setEventSource(null);
+          setIsGenerating(false);
+        } catch (e) {
+          console.error('Error parsing complete event:', e);
+          
+          // Close the event source
+          sse.close();
+          setEventSource(null);
+          setIsGenerating(false);
         }
-        
-        // Reset states
-        setActiveModelIndex(-1);
-        setActiveStage(null);
-        setProgress(100);
-        
-        // Save to history
-        saveHistory({
-          topic,
-          timestamp: new Date().toISOString(),
-          outputs: data.stages,
-          finalOutput: data.finalOutput,
-          wordCount: data.finalOutput.trim().split(/\s+/).length
-        });
-        
-        // Close the event source
-        sse.close();
-        setEventSource(null);
-        setIsGenerating(false);
       });
       
       sse.addEventListener('error', (event) => {
-        const data = JSON.parse(event.data || '{"message": "Unknown error"}');
-        console.error('Error in stream:', data);
-        setError(`An error occurred: ${data.message}`);
+        let errorData;
+        try {
+          if (event.data) {
+            errorData = JSON.parse(event.data);
+          } else {
+            errorData = { message: "Connection error or server unavailable" };
+          }
+        } catch (e) {
+          errorData = { message: "Connection error or server unavailable" };
+        }
+        console.error('Error in stream:', errorData);
+        setError(`An error occurred: ${errorData.message}`);
         
         // Reset states
         setActiveModelIndex(-1);
@@ -340,6 +382,9 @@ const ModelChainPanel = () => {
         setIsGenerating(false);
       };
       
+      // Set the event source to state
+      setEventSource(sse);
+      
     } catch (err) {
       console.error('Error setting up streaming:', err);
       setError(`An error occurred: ${err.message}`);
@@ -347,14 +392,62 @@ const ModelChainPanel = () => {
     }
   };
 
-  const cancelGeneration = () => {
-    if (eventSource) {
-      eventSource.close();
-      setEventSource(null);
+  const cancelGeneration = async () => {
+    if (!isGenerating) return;
+    
+    try {
+      console.log('Attempting to cancel generation...');
+      
+      if (eventSource) {
+        // Get the request ID from the event source
+        const requestId = eventSource.requestId;
+        
+        // If we have a request ID, call the cancel endpoint
+        if (requestId) {
+          console.log('Cancelling request with ID:', requestId);
+          
+          // Make the cancellation request
+          const cancelResponse = await fetch(`http://localhost:3001/api/chain/cancel?requestId=${requestId}`);
+          const cancelResult = await cancelResponse.json();
+          console.log('Cancel response:', cancelResult);
+          
+          if (!cancelResult.success) {
+            console.warn('Server reported cancellation failed:', cancelResult.error || 'Unknown error');
+          }
+        } else {
+          console.warn('No request ID available for cancellation');
+        }
+        
+        // Close the event source regardless of server response
+        console.log('Closing event source');
+        eventSource.close();
+        setEventSource(null);
+      } else {
+        console.warn('No event source to cancel');
+      }
+      
+      // Reset UI state
+      console.log('Resetting UI state');
+      setIsGenerating(false);
+      setActiveModelIndex(-1);
+      setActiveStage(null);
+      
+      // Add a message to indicate cancellation
+      setError('Generation cancelled by user.');
+    } catch (error) {
+      console.error('Error cancelling generation:', error);
+      
+      // Force reset state even if cancellation failed
+      if (eventSource) {
+        eventSource.close();
+        setEventSource(null);
+      }
+      
+      setIsGenerating(false);
+      setActiveModelIndex(-1);
+      setActiveStage(null);
+      setError('Failed to cancel generation properly, but generation has been stopped.');
     }
-    setIsGenerating(false);
-    setActiveModelIndex(-1);
-    setActiveStage(null);
   };
 
   const toggleQualityCheck = () => {

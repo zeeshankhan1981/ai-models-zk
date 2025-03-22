@@ -4,6 +4,9 @@ const axios = require('axios');
 const app = express();
 const PORT = 3001;
 
+// Map to track active requests by requestId
+const activeRequests = new Map();
+
 app.use(cors());
 app.use(express.json());
 
@@ -656,6 +659,7 @@ Write an engaging op-ed based on the draft below. Improve clarity, structure, an
 - Have a clear thesis and three supporting arguments
 - End with a memorable conclusion
 - Use persuasive language throughout
+- Use proper markdown formatting with headings, emphasis, and well-structured paragraphs
 
 Rewrite the following:
 
@@ -700,26 +704,34 @@ function trimTo750Words(text) {
 }
 
 // Function to perform a quality check on the generated article
-async function performQualityCheck(article, topic) {
+async function performQualityCheck(article, topic, requestObj = null) {
   try {
-    const checkPrompt = `
-Does the following article stay on-topic about "${topic}", use persuasive tone, and stay under 750 words?
+    // Check if the request has been cancelled
+    if (requestObj && requestObj.cancelled) {
+      return '';
+    }
+    
+    const prompt = `You are a quality assurance editor. Evaluate the following article on "${topic}" for:
+1. Clarity and coherence
+2. Structure and organization
+3. Persuasiveness
+4. Grammar and style
+
+Provide a brief (2-3 sentence) assessment of the article's strengths and any areas for improvement.
 
 Article:
-${article}
+${article}`;
 
-Reply with YES or NO and a 2-sentence critique.`;
-
-    const response = await queryModel('mistral:latest', checkPrompt);
+    const response = await queryModel('mistral:latest', prompt, requestObj);
     return response;
   } catch (error) {
     console.error('Error performing quality check:', error);
-    return 'Quality check unavailable';
+    return 'Unable to perform quality check due to an error.';
   }
 }
 
 // Function to query a model with a prompt
-async function queryModel(modelId, prompt) {
+async function queryModel(modelId, prompt, requestObj = null) {
   // Define model-specific parameters
   const modelParams = {
     'gemma:2b': {
@@ -757,6 +769,7 @@ async function queryModel(modelId, prompt) {
   };
 
   try {
+    const axiosController = new AbortController();
     const response = await axios.post(`${OLLAMA_API}/chat`, {
       model: modelId,
       messages: [{ role: 'system', content: SYSTEM_PROMPTS[modelId] }, { role: 'user', content: prompt }],
@@ -765,8 +778,15 @@ async function queryModel(modelId, prompt) {
         ...CPU_OPTIMIZATION,
       },
       stream: false
+    }, {
+      signal: axiosController.signal,
+      timeout: 60000 // 60 second timeout
     });
-
+    
+    if (requestObj) {
+      requestObj.axiosController = axiosController;
+    }
+    
     return response.data.message.content.trim();
   } catch (error) {
     console.error(`Error querying model ${modelId}:`, error.message);
@@ -781,6 +801,35 @@ const SYSTEM_PROMPTS = {
   'zephyr-7b:latest': 'You rewrite text for tone, persuasion, and human readability. Focus on creating a coherent flow between paragraphs.',
   'llama3:latest': 'You are a seasoned editorial writer producing fully polished articles. Your articles must be concise (maximum 750 words), persuasive, and have excellent structure with a clear thesis, supporting arguments, and memorable conclusion.'
 };
+
+// Endpoint to cancel an ongoing generation
+app.get('/api/chain/cancel', (req, res) => {
+  const { requestId } = req.query;
+  
+  if (!requestId) {
+    return res.status(400).json({ error: 'Request ID is required' });
+  }
+  
+  if (activeRequests.has(requestId)) {
+    console.log(`Cancelling request: ${requestId}`);
+    const request = activeRequests.get(requestId);
+    
+    // Mark the request as cancelled
+    request.cancelled = true;
+    
+    // If there's an active axios request, cancel it
+    if (request.axiosController) {
+      request.axiosController.abort();
+    }
+    
+    // Remove from active requests
+    activeRequests.delete(requestId);
+    
+    return res.json({ success: true, message: 'Request cancelled successfully' });
+  } else {
+    return res.status(404).json({ error: 'Request not found or already completed' });
+  }
+});
 
 // Add streaming endpoint for model chain
 app.get('/api/chain/stream', async (req, res) => {
@@ -797,37 +846,96 @@ app.get('/api/chain/stream', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
     
+    // Generate a unique request ID
+    const requestId = Date.now().toString();
+    
+    // Create a request object to track this request
+    const requestObj = {
+      id: requestId,
+      cancelled: false,
+      axiosController: null,
+      response: res
+    };
+    
+    // Add to active requests
+    activeRequests.set(requestId, requestObj);
+    
+    // Send the request ID to the client
+    res.write(`event: requestId\n`);
+    res.write(`data: ${JSON.stringify({ requestId })}\n\n`);
+    
     // Helper function to send SSE events
     const sendEvent = (eventType, data) => {
+      // Check if request was cancelled before sending
+      if (requestObj.cancelled) {
+        return false;
+      }
       res.write(`event: ${eventType}\n`);
       res.write(`data: ${JSON.stringify(data)}\n\n`);
+      return true;
     };
     
     // Start the model chain process
     try {
       // Step 1: Gemma - Ideas Generation
-      sendEvent('modelStart', { model: 'gemma:2b', stage: 'ideas' });
+      if (!sendEvent('modelStart', { model: 'gemma:2b', stage: 'ideas' })) {
+        return res.end();
+      }
+      
       const gemmaPrompt = `List 5 angles for an article on: ${topic}`;
-      const gemma = await queryModel('gemma:2b', gemmaPrompt);
+      const gemma = await queryModel('gemma:2b', gemmaPrompt, requestObj);
+      
+      // Check if request was cancelled during model query
+      if (requestObj.cancelled) {
+        return res.end();
+      }
+      
       const formattedGemma = formatModelOutput(gemma, 'gemma:2b');
-      sendEvent('modelComplete', { model: 'gemma:2b', output: formattedGemma, stage: 'ideas' });
+      if (!sendEvent('modelComplete', { model: 'gemma:2b', output: formattedGemma, stage: 'ideas' })) {
+        return res.end();
+      }
       
       // Step 2: Mistral - Outline Creation
-      sendEvent('modelStart', { model: 'mistral:latest', stage: 'outline' });
+      if (!sendEvent('modelStart', { model: 'mistral:latest', stage: 'outline' })) {
+        return res.end();
+      }
+      
       const mistralPrompt = `Pick one of the following ideas and create a structured outline with key arguments and examples:\n${formattedGemma}`;
-      const mistral = await queryModel('mistral:latest', mistralPrompt);
+      const mistral = await queryModel('mistral:latest', mistralPrompt, requestObj);
+      
+      // Check if request was cancelled during model query
+      if (requestObj.cancelled) {
+        return res.end();
+      }
+      
       const formattedMistral = formatModelOutput(mistral, 'mistral:latest');
-      sendEvent('modelComplete', { model: 'mistral:latest', output: formattedMistral, stage: 'outline' });
+      if (!sendEvent('modelComplete', { model: 'mistral:latest', output: formattedMistral, stage: 'outline' })) {
+        return res.end();
+      }
       
       // Step 3: Zephyr - Draft Writing
-      sendEvent('modelStart', { model: 'zephyr-7b:latest', stage: 'draft' });
+      if (!sendEvent('modelStart', { model: 'zephyr-7b:latest', stage: 'draft' })) {
+        return res.end();
+      }
+      
       const zephyrPrompt = `Transform this outline into a persuasive op-ed with emotional clarity and logical flow:\n${formattedMistral}`;
-      const zephyr = await queryModel('zephyr-7b:latest', zephyrPrompt);
+      const zephyr = await queryModel('zephyr-7b:latest', zephyrPrompt, requestObj);
+      
+      // Check if request was cancelled during model query
+      if (requestObj.cancelled) {
+        return res.end();
+      }
+      
       const formattedZephyr = formatModelOutput(zephyr, 'zephyr-7b:latest');
-      sendEvent('modelComplete', { model: 'zephyr-7b:latest', output: formattedZephyr, stage: 'draft' });
+      if (!sendEvent('modelComplete', { model: 'zephyr-7b:latest', output: formattedZephyr, stage: 'draft' })) {
+        return res.end();
+      }
       
       // Step 4: LLaMA 3 - Final Article
-      sendEvent('modelStart', { model: 'llama3:latest', stage: 'final' });
+      if (!sendEvent('modelStart', { model: 'llama3:latest', stage: 'final' })) {
+        return res.end();
+      }
+      
       const llama3Prompt = `You are a seasoned editorial writer.
 
 Write an engaging op-ed based on the draft below. Improve clarity, structure, and tone. The final piece must:
@@ -840,23 +948,38 @@ Write an engaging op-ed based on the draft below. Improve clarity, structure, an
 Rewrite the following:
 
 ${formattedZephyr}`;
-      const llama3 = await queryModel('llama3:latest', llama3Prompt);
+      const llama3 = await queryModel('llama3:latest', llama3Prompt, requestObj);
+      
+      // Check if request was cancelled during model query
+      if (requestObj.cancelled) {
+        return res.end();
+      }
       
       // Post-process to ensure we don't exceed 750 words
       const trimmedOutput = trimTo750Words(llama3);
       const formattedLlama3 = formatModelOutput(trimmedOutput, 'llama3:latest');
       
       // Optional: Add a quality check step
-      sendEvent('modelStart', { model: 'mistral:latest', stage: 'quality' });
-      const qualityCheck = await performQualityCheck(formattedLlama3, topic);
+      if (!sendEvent('modelStart', { model: 'mistral:latest', stage: 'quality' })) {
+        return res.end();
+      }
       
-      sendEvent('modelComplete', { 
+      const qualityCheck = await performQualityCheck(formattedLlama3, topic, requestObj);
+      
+      // Check if request was cancelled during quality check
+      if (requestObj.cancelled) {
+        return res.end();
+      }
+      
+      if (!sendEvent('modelComplete', { 
         model: 'llama3:latest', 
         output: formattedLlama3, 
         stage: 'final',
         wordCount: formattedLlama3.split(/\s+/).length,
         qualityCheck: qualityCheck
-      });
+      })) {
+        return res.end();
+      }
       
       // Send completion event
       sendEvent('complete', { 
@@ -874,6 +997,8 @@ ${formattedZephyr}`;
       console.error('Error in model chain:', error);
       sendEvent('error', { message: error.message || 'Unknown error in model chain' });
     } finally {
+      // Remove from active requests
+      activeRequests.delete(requestId);
       // End the response
       res.end();
     }
