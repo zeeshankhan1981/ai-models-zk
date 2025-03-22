@@ -6,6 +6,20 @@ const path = require('path');
 
 const execAsync = promisify(exec);
 
+// Model mapping to handle different naming conventions
+const MODEL_MAPPINGS = {
+  'llama3': ['llama3', 'llama-3'],
+  'llama2': ['llama2', 'llama-2'],
+  'codellama': ['codellama', 'codellama-7b-code', 'code-llama'],
+  'zephyr-7b': ['zephyr', 'zephyr-7b'],
+  'phi-2': ['phi-2', 'phi2'],
+  'mistral': ['mistral', 'mistral-7b'],
+  'deepseek': ['deepseek', 'deepseek-coder'],
+  'starcoder2': ['starcoder2', 'starcoder-2'],
+  'starcoder': ['starcoder'],
+  'metamath': ['metamath']
+};
+
 async function checkModelAvailability() {
   try {
     console.log('Checking available models in Ollama...');
@@ -55,24 +69,15 @@ async function updateModelsConfig() {
       
       const modelId = idMatch[1];
       
-      // Special case for codellama
-      if (modelId === 'codellama' && (availableModels.includes('codellama') || 
-          availableModels.includes('codellama-7b-code'))) {
-        return true;
-      }
+      // Check if any of the model's aliases are available
+      const aliases = MODEL_MAPPINGS[modelId] || [modelId];
+      const isAvailable = aliases.some(alias => 
+        availableModels.some(availModel => 
+          availModel.toLowerCase() === alias.toLowerCase()
+        )
+      );
       
-      // Special case for llama3
-      if (modelId === 'llama3' && availableModels.includes('llama3')) {
-        return true;
-      }
-      
-      // Special case for zephyr
-      if (modelId === 'zephyr-7b' && (availableModels.includes('zephyr-7b') || 
-          availableModels.includes('zephyr'))) {
-        return true;
-      }
-      
-      return availableModels.includes(modelId);
+      return isAvailable;
     });
     
     // Rebuild the models array
@@ -97,6 +102,10 @@ async function updateModelsConfig() {
       return idMatch ? idMatch[1] : 'unknown';
     });
     console.log('Available model IDs:', availableIds.join(', '));
+    
+    // Copy the updated file to api.js
+    await fs.copyFile(tempApiFilePath, apiFilePath);
+    console.log('Updated api.js with available models');
     
   } catch (error) {
     console.error('Error updating models config:', error);
