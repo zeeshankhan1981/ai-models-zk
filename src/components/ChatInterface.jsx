@@ -44,8 +44,24 @@ const ChatInterface = ({ selectedModel, models }) => {
 
   // Check model availability when selected model changes
   useEffect(() => {
-    if (selectedModel && !modelAvailability[selectedModel]) {
+    if (selectedModel) {
+      // Clear streaming response when model changes
+      setStreamingResponse('');
+      
+      // Cancel any ongoing requests
+      if (abortController) {
+        abortController.abort();
+        setAbortController(null);
+      }
+      
+      // Reset loading state
+      setIsLoading(false);
+      
+      // Check if the new model is available
       checkModelAvailability();
+      
+      // Clear chat when switching models
+      clearChatOnModelSwitch();
     }
   }, [selectedModel]);
 
@@ -64,6 +80,21 @@ const ChatInterface = ({ selectedModel, models }) => {
     // Load chat history for this model from localStorage
     loadChatHistory();
   }, [selectedModel]);
+
+  // Add a function to clear chat when switching models
+  const clearChatOnModelSwitch = () => {
+    setMessages([
+      {
+        role: 'assistant',
+        content: `You are now chatting with ${currentModel.name}. ${currentModel.shortDescription || ''}`,
+        timestamp: new Date().toISOString(),
+        model: currentModel.name || selectedModel,
+        isSystemMessage: true
+      }
+    ]);
+    setStreamingResponse('');
+    localStorage.removeItem(`chatHistory-${selectedModel}`);
+  };
 
   // Check which models are available in Ollama
   const checkModelAvailability = async () => {
@@ -93,7 +124,7 @@ const ChatInterface = ({ selectedModel, models }) => {
   // Load chat history from localStorage
   const loadChatHistory = () => {
     try {
-      const savedMessages = localStorage.getItem(`chat_history_${selectedModel}`);
+      const savedMessages = localStorage.getItem(`chatHistory-${selectedModel}`);
       if (savedMessages) {
         setMessages(JSON.parse(savedMessages));
       } else {
@@ -468,7 +499,7 @@ const ChatInterface = ({ selectedModel, models }) => {
 
   const clearHistory = () => {
     setMessages([]);
-    localStorage.removeItem(`chat_history_${selectedModel}`);
+    localStorage.removeItem(`chatHistory-${selectedModel}`);
     console.log(`Cleared chat history for model: ${selectedModel}`);
   };
 
@@ -505,7 +536,7 @@ const ChatInterface = ({ selectedModel, models }) => {
 
   const saveChatHistory = () => {
     try {
-      localStorage.setItem(`chat_history_${selectedModel}`, JSON.stringify(messages));
+      localStorage.setItem(`chatHistory-${selectedModel}`, JSON.stringify(messages));
     } catch (error) {
       console.error('Error saving messages to localStorage:', error);
     }
@@ -523,8 +554,8 @@ const ChatInterface = ({ selectedModel, models }) => {
           <>
             {messages.map((message, index) => (
               <motion.div 
-                key={index} 
-                className={`message ${message.role === 'user' ? 'user-message' : 'assistant-message'} ${message.error ? 'error' : ''}`}
+                key={index}
+                className={`message ${message.role === 'user' ? 'user-message' : 'assistant-message'} ${message.error ? 'error-message' : ''} ${message.isSystemMessage ? 'system-message' : ''}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -535,15 +566,15 @@ const ChatInterface = ({ selectedModel, models }) => {
                     {message.role === 'assistant' && message.model && (
                       <span className="model-badge">{message.model}</span>
                     )}
-                    {message.stopped && (
-                      <span className="stopped-badge">Stopped</span>
+                    {message.role === 'assistant' && message.error && (
+                      <span className="error-badge">Error</span>
                     )}
-                    {message.error && (
-                      <span className="stopped-badge">Error</span>
+                    {message.role === 'assistant' && message.isSystemMessage && (
+                      <span className="system-badge">System</span>
                     )}
                   </span>
                 </div>
-                <div className={`message-content ${message.error ? 'error' : ''}`}>
+                <div className={`message-content ${message.error ? 'error-message' : ''}`}>
                   {message.role === 'assistant' ? (
                     <ReactMarkdown
                       components={{
