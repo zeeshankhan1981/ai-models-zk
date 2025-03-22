@@ -713,6 +713,98 @@ const SYSTEM_PROMPTS = {
   'llama3:latest': 'You are a seasoned editorial writer producing fully polished articles. Your articles must be concise (maximum 750 words), persuasive, and have excellent structure with a clear thesis, supporting arguments, and memorable conclusion.'
 };
 
+// Add streaming endpoint for model chain
+app.get('/api/chain/stream', async (req, res) => {
+  try {
+    const { topic } = req.query;
+    
+    if (!topic) {
+      return res.status(400).json({ error: 'Topic is required' });
+    }
+    
+    // Set headers for SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    
+    // Helper function to send SSE events
+    const sendEvent = (eventType, data) => {
+      res.write(`event: ${eventType}\n`);
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+    
+    // Start the model chain process
+    try {
+      // Step 1: Gemma - Ideas Generation
+      sendEvent('modelStart', { model: 'gemma:2b', stage: 'ideas' });
+      const gemmaPrompt = `List 5 angles for an article on: ${topic}`;
+      const gemma = await queryModel('gemma:2b', gemmaPrompt);
+      sendEvent('modelComplete', { model: 'gemma:2b', output: gemma, stage: 'ideas' });
+      
+      // Step 2: Mistral - Outline Creation
+      sendEvent('modelStart', { model: 'mistral:latest', stage: 'outline' });
+      const mistralPrompt = `Pick one of the following ideas and create a structured outline with key arguments and examples:\n${gemma}`;
+      const mistral = await queryModel('mistral:latest', mistralPrompt);
+      sendEvent('modelComplete', { model: 'mistral:latest', output: mistral, stage: 'outline' });
+      
+      // Step 3: Zephyr - Draft Writing
+      sendEvent('modelStart', { model: 'zephyr-7b:latest', stage: 'draft' });
+      const zephyrPrompt = `Transform this outline into a persuasive op-ed with emotional clarity and logical flow:\n${mistral}`;
+      const zephyr = await queryModel('zephyr-7b:latest', zephyrPrompt);
+      sendEvent('modelComplete', { model: 'zephyr-7b:latest', output: zephyr, stage: 'draft' });
+      
+      // Step 4: LLaMA 3 - Final Article
+      sendEvent('modelStart', { model: 'llama3:latest', stage: 'final' });
+      const llama3Prompt = `You are a seasoned editorial writer.
+
+Write an engaging op-ed based on the draft below. Improve clarity, structure, and tone. The final piece must:
+- Be **no more than 750 words**
+- Have a clear thesis and three supporting arguments
+- End with a memorable conclusion
+- Use persuasive language throughout
+
+Rewrite the following:
+
+${zephyr}`;
+      const llama3 = await queryModel('llama3:latest', llama3Prompt);
+      
+      // Post-process to ensure we don't exceed 750 words
+      const trimmedOutput = trimTo750Words(llama3);
+      
+      // Optional: Add a quality check step
+      sendEvent('modelStart', { model: 'mistral:latest', stage: 'quality' });
+      const qualityCheck = await performQualityCheck(trimmedOutput, topic);
+      
+      sendEvent('modelComplete', { 
+        model: 'llama3:latest', 
+        output: trimmedOutput, 
+        stage: 'final',
+        wordCount: trimmedOutput.split(/\s+/).length,
+        qualityCheck: qualityCheck
+      });
+      
+      // Send completion event
+      sendEvent('complete', { 
+        finalOutput: trimmedOutput,
+        stages: { gemma, mistral, zephyr, llama3: trimmedOutput },
+        qualityCheck
+      });
+      
+    } catch (error) {
+      console.error('Error in model chain:', error);
+      sendEvent('error', { message: error.message || 'Unknown error in model chain' });
+    } finally {
+      // End the response
+      res.end();
+    }
+    
+  } catch (error) {
+    console.error('Error in stream chain endpoint:', error);
+    res.status(500).json({ error: error.message || 'Unknown error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`API server running on port ${PORT}`);
   console.log('Available models:');

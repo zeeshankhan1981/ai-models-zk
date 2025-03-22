@@ -19,6 +19,19 @@ All notable changes to the AverroesMind Multi-Model LLM Playground will be docum
 - Enhanced styling for final output with better visual hierarchy
 - Added note about 750-word limit in the input area
 
+## [v2.9.2] - 2025-03-22
+
+### Added
+- Implemented streaming response for model chain to improve user experience
+- Added real-time feedback as each model in the chain completes its work
+- Enhanced UI with progress indicators and typing animations for active models
+- Improved scrolling behavior in the chat interface
+
+### Fixed
+- Fixed scrolling issues in the ModelChainPanel component
+- Improved error handling in the streaming API endpoint
+- Added proper CORS headers for streaming responses
+
 ## [v2.9.1] - 2025-03-22
 
 ### 🎨 UI Enhancements
