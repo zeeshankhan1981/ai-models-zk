@@ -1,8 +1,8 @@
-# AverroesMind - Multi-Model AI Chat Interface
+# Averroes - Multi-Model AI Chat Interface
 
-AverroesMind is a modern, elegant, and feature-rich interface for interacting with multiple Ollama models on your local machine. It provides a seamless way to chat with different AI models, compare their responses, and leverage their unique capabilities - all while keeping your data private and secure on your own hardware.
+Averroes is a modern, elegant, and feature-rich interface for interacting with multiple Ollama models on your local machine. It provides a seamless way to chat with different AI models, compare their responses, and leverage their unique capabilities - all while keeping your data private and secure on your own hardware.
 
-![AverroesMind Screenshot](screenshot.png)
+![Averroes Screenshot](screenshot.png)
 
 ## Features
 
@@ -17,12 +17,15 @@ AverroesMind is a modern, elegant, and feature-rich interface for interacting wi
 - **Syntax Highlighting**: Beautiful code highlighting for programming responses
 - **Markdown Support**: Rich text formatting with full markdown rendering
 - **Character Counter**: Visual indicator of input length with configurable limits per model
+- **Model-Specific Prompt Guides**: Access tailored prompting tips and examples for each model to get the best results
 
 ### User Interface
 - **Light/Dark Mode**: Toggle between themes based on your preference
 - **Responsive Design**: Optimized for both desktop and mobile devices
 - **Animated Transitions**: Smooth animations for a polished user experience
 - **Loading Indicators**: Clear visual feedback during model processing
+- **Infinite Scrolling**: Efficiently handle long conversations with virtualized list rendering
+- **Scroll-to-Bottom Button**: Easily navigate to the latest messages in long conversations
 
 ### History & Management
 - **Persistent Chat History**: Conversations are automatically saved locally for each model
@@ -35,10 +38,11 @@ AverroesMind is a modern, elegant, and feature-rich interface for interacting wi
 - **Custom System Prompts**: Tailored system instructions for each model to optimize responses
 - **Error Handling**: Robust error management with user-friendly messages
 - **Local Processing**: All data stays on your machine for complete privacy
+- **Model-Specific Character Limits**: Automatically adjusts input limits based on each model's context window
 
 ## Architecture
 
-AverroesMind consists of two main components:
+Averroes consists of two main components:
 
 1. **Frontend**: A React application built with Vite that provides the user interface
 2. **Backend**: An Express.js API server that communicates with Ollama
@@ -150,11 +154,54 @@ Run the included monitoring script to check GPU utilization:
 ./server/monitor_gpu_usage.sh
 ```
 
+## Prompt Guides
+
+Averroes includes model-specific prompt guides to help you get the best results from each model. These guides provide:
+
+1. **Best Use Cases**: Understanding what each model excels at
+2. **Prompting Tips**: Strategies for crafting effective prompts for each model
+3. **Example Prompts**: Ready-to-use examples that you can apply with a single click
+
+To access the prompt guides:
+1. Select a model from the dropdown
+2. Click the "Prompt Guide" button below the chat input
+3. Review the tips and examples for the selected model
+4. Click on any example prompt to automatically apply it to your chat input
+
+### Guide Implementation Details
+
+The prompt guides are implemented as markdown files in the `public/prompt_guides/` directory. Each model has its own guide file that follows a consistent format:
+
+```
+# [Model Name] Prompt Guide
+
+## Best For
+- [Use case 1]
+- [Use case 2]
+- [Use case 3]
+
+## Prompting Tips
+- [Tip 1]
+- [Tip 2]
+- [Tip 3]
+
+## Example Prompts
+[Example prompt 1]
+
+[Example prompt 2]
+```
+
+The `PromptGuide` component dynamically loads these markdown files based on the selected model and renders them with clickable example prompts that can be applied directly to the chat input.
+
 ## Project Structure
 
 ```
 ai-models-zk/
 ├── public/                  # Static assets
+│   ├── prompt_guides/       # Model-specific markdown guides
+│   │   ├── mistral_latest.md
+│   │   ├── llama2_latest.md
+│   │   └── ...
 ├── server/                  # Backend API server
 │   ├── api.js               # API endpoints and model definitions
 │   └── package.json         # Backend dependencies
@@ -163,12 +210,37 @@ ai-models-zk/
 │   │   ├── ChatInterface.jsx    # Main chat interface
 │   │   ├── ModelSelector.jsx    # Model selection dropdown
 │   │   ├── ModelInfo.jsx        # Model information display
+│   │   ├── PromptGuide.jsx      # Prompt guide component
 │   │   └── ThemeToggle.jsx      # Light/dark mode toggle
 │   ├── App.jsx              # Main application component
 │   ├── main.jsx             # Application entry point
 │   └── styles/              # CSS and styling
 └── package.json             # Frontend dependencies
 ```
+
+## API Reference
+
+The Averroes API provides several endpoints for interacting with AI models:
+
+### GET /api/models/check
+Returns a list of available models and their status.
+
+### POST /api/chat
+Sends a message to a model and receives a complete response.
+
+**Parameters:**
+- `modelId` (string): The ID of the model to use
+- `prompt` (string): The user's message
+- `systemPrompt` (string, optional): Custom system instructions
+
+### POST /api/chat/stream
+Sends a message to a model and receives a streamed response.
+
+**Parameters:**
+- `modelId` (string): The ID of the model to use
+- `prompt` (string): The user's message
+- `messages` (array, optional): Full conversation history for context
+- `systemPrompt` (string, optional): Custom system instructions
 
 ## Customization
 
@@ -195,6 +267,19 @@ To add a new model:
    }
    ```
 
+3. Create a prompt guide for the model:
+   ```bash
+   touch public/prompt_guides/model_name.md
+   ```
+
+4. Update the model mapping in `PromptGuide.jsx`:
+   ```javascript
+   const modelGuideMap = {
+     // existing models...
+     'model-id': 'model_name.md'
+   };
+   ```
+
 ### Modifying System Prompts
 
 Each model has a custom system prompt that guides its behavior. These can be modified in `server/api.js` to better suit your specific needs.
@@ -203,12 +288,32 @@ Each model has a custom system prompt that guides its behavior. These can be mod
 
 The application uses CSS variables for theming, making it easy to customize the look and feel. The main theme variables are defined in `src/App.css`.
 
+## Performance Optimization
+
+Averroes includes several optimizations for handling long conversations:
+
+1. **Virtualized Rendering**: Only visible messages are rendered, improving performance
+2. **Message Batching**: Messages are loaded in batches to reduce memory usage
+3. **Automatic Cleanup**: Very long conversations are automatically trimmed
+4. **Model-Specific Limits**: Character limits are tailored to each model's capabilities
+
 ## Troubleshooting
 
 - **Models not loading**: Ensure Ollama is running (`ollama serve`) and the models have been pulled
 - **Slow responses**: For GPU-intensive models, check your system resources and close other demanding applications
 - **Connection errors**: Verify that the API server is running on port 3001 and accessible to the frontend
 - **Formatting issues**: If model responses contain unexpected formatting tokens, you may need to update the cleaning patterns in `cleanModelResponse` function
+
+## Version History
+
+- **v2.6**: Added model-specific prompt guides and fixed API compatibility
+- **v2.5**: Fixed scrolling issues and added scroll-to-bottom button
+- **v2.4**: Implemented infinite scrolling with virtualization
+- **v2.3**: Added model-specific character limits
+- **v2.2**: Fixed model availability check for models with colons
+- **v2.1**: Added response stopping capability
+- **v2.0**: Redesigned UI with light/dark mode
+- **v1.0**: Initial release with basic chat functionality
 
 ## Contributing
 

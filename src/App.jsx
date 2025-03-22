@@ -76,8 +76,8 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1>AverroesMind</h1>
-          <span className="app-subtitle">Your personal AI hub</span>
+          <h1>Averroes</h1>
+          <span className="app-subtitle">Your Personal Writer</span>
         </motion.div>
         
         <div className="app-controls">
