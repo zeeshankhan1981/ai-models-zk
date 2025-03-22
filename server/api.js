@@ -49,7 +49,7 @@ const models = [
     top_p: 0.9,
     top_k: 40,
     num_predict: 512,
-    characterLimit: 1500,
+    characterLimit: 24000,
     requiresGPU: false,
     systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information. Do not provide harmful, unethical, or illegal content."
   },
@@ -63,7 +63,7 @@ const models = [
     top_p: 0.95,
     top_k: 40,
     num_predict: 1024, // Higher token limit for code
-    characterLimit: 1500,
+    characterLimit: 24000,
     requiresGPU: false,
     systemPrompt: "You are a specialized coding assistant focused on helping with programming tasks. Provide clear, efficient, and well-documented code examples. Focus exclusively on programming-related questions and tasks. If asked about non-programming topics, politely explain that you're specialized in coding and programming. Always include comments in your code to explain complex logic, and provide explanations of how the code works when appropriate."
   },
@@ -77,7 +77,7 @@ const models = [
     top_p: 0.95,
     top_k: 40,
     num_predict: 768, // Reduced from 1024 for better CPU performance
-    characterLimit: 1500,
+    characterLimit: 50000,
     requiresGPU: false, // Changed to false for CPU compatibility
     systemPrompt: "You are an expert programming assistant specialized in code generation and software development. Focus exclusively on providing detailed, efficient, and well-structured code solutions. When asked about code or programming concepts, provide thorough explanations with examples. If asked about non-programming topics, politely explain that you're specialized in software development and can best help with programming-related questions. Always include proper error handling and follow best practices for the language you're working with."
   },
@@ -91,7 +91,7 @@ const models = [
     top_p: 0.9,
     top_k: 40,
     num_predict: 512,
-    characterLimit: 1500,
+    characterLimit: 24000,
     requiresGPU: false,
     systemPrompt: "You are a helpful, conversational assistant designed to provide thoughtful and engaging responses. Always be respectful, ethical, and appropriate in your answers. If you don't know something, admit it rather than making up information. If a question is unclear, ask for clarification. Avoid providing harmful, illegal, unethical or deceptive information. Focus on being helpful while maintaining safety and ethical standards."
   },
@@ -105,7 +105,7 @@ const models = [
     top_p: 0.95,
     top_k: 50,
     num_predict: 768,
-    characterLimit: 1500,
+    characterLimit: 24000,
     requiresGPU: true,
     systemPrompt: "You are a mathematics expert assistant focused EXCLUSIVELY on mathematical topics. You MUST ONLY respond to questions related to mathematics, such as algebra, calculus, statistics, geometry, number theory, and mathematical logic. If a user asks about ANY non-mathematical topic, politely explain that you are a specialized mathematics assistant and can only help with math-related questions. NEVER provide responses about medical issues, personal relationships, politics, or any other non-mathematical topics. Your purpose is to provide clear, step-by-step solutions to mathematical problems and explain mathematical concepts."
   },
@@ -119,7 +119,7 @@ const models = [
     top_p: 0.9,
     top_k: 40,
     num_predict: 512,
-    characterLimit: 1500,
+    characterLimit: 6000,
     requiresGPU: false,
     systemPrompt: "You are a helpful, concise assistant with strong reasoning capabilities. Provide clear and accurate responses to questions, focusing on being factual and logical. If you're unsure about something, acknowledge your uncertainty rather than making up information. Keep your responses concise and to the point. Always be respectful, appropriate, and ethical in your responses."
   },
@@ -133,7 +133,7 @@ const models = [
     top_p: 0.9,
     top_k: 40,
     num_predict: 512,
-    characterLimit: 1500,
+    characterLimit: 12000,
     requiresGPU: false,
     systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
   },
@@ -147,7 +147,7 @@ const models = [
     top_p: 0.9,
     top_k: 40,
     num_predict: 512,
-    characterLimit: 1500,
+    characterLimit: 24000,
     requiresGPU: true,
     systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
   },
@@ -161,7 +161,7 @@ const models = [
     top_p: 0.9,
     top_k: 40,
     num_predict: 512,
-    characterLimit: 1500,
+    characterLimit: 8000,
     requiresGPU: false,
     systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
   }
