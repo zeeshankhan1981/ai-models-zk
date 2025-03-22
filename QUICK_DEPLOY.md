@@ -62,6 +62,81 @@ If you encounter any issues during deployment:
 
 4. If the deployment script fails, you can run it again. It's designed to be idempotent (can be run multiple times without issues).
 
+## Troubleshooting Common Issues
+
+### Module Compatibility Issues
+
+If you encounter errors related to ES modules vs CommonJS, use the following fix:
+
+```bash
+# Copy the server file with .cjs extension to force CommonJS mode
+cp server_commonjs.js server.cjs
+
+# Restart the server with the .cjs file
+pm2 stop all
+pm2 delete all
+pm2 start server.cjs --name averroesmind
+pm2 save
+```
+
+### Port Conflicts
+
+If you encounter port conflicts, check what's using the ports:
+
+```bash
+# Check what's using ports 3000 and 3001
+netstat -tulpn | grep -E '3000|3001'
+
+# Kill any processes using those ports
+kill -9 <PID>
+```
+
+### Checking Available Models
+
+To check which models are available in Ollama:
+
+```bash
+curl -s http://localhost:11434/api/tags
+```
+
+To check which models are available in the application:
+
+```bash
+curl -s http://localhost:3000/api/models
+```
+
+## Updating the Application
+
+To update the application with the latest changes:
+
+```bash
+# Pull the latest changes
+cd /var/www/averroesmind.xyz
+git pull
+
+# Rebuild the application
+npm install
+npm run build
+
+# Restart the server
+pm2 restart averroesmind
+```
+
+## Monitoring
+
+To monitor the application:
+
+```bash
+# View logs
+pm2 logs averroesmind
+
+# View status
+pm2 status
+
+# Monitor CPU and memory usage
+pm2 monit
+```
+
 ## Manual Deployment Steps
 
 If you prefer to deploy manually, follow these steps:
