@@ -190,7 +190,8 @@ pm2 startup
 echo "📦 Pulling CPU-optimized models..."
 ollama pull mistral
 ollama pull phi:2
-ollama pull llama2
+# Skip llama2 as it might not be available
+# ollama pull llama2
 OLLAMA_CPU_ONLY=true ollama pull codellama:7b-code
 
 # Create CPU-optimized models
