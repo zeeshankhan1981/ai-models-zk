@@ -134,6 +134,24 @@ Version 2.9 introduces significant improvements to the AI Model Chaining feature
 
 This update enhances the user experience by providing a more consistent interface across the application while adding powerful new features for managing generated content.
 
+## New in v2.9.1
+
+### Model Chain Experience
+
+The Model Chain feature now includes an intuitive visual flow indicator that clearly illustrates the 4-model process:
+
+- **Visual Process Indicator**: A dynamic flow diagram shows each model in the chain with its specific role
+- **Real-time Status Tracking**: Visual indicators show which model is currently active during generation
+- **Role-based Design**: Each model is presented with its specific function in the article creation process:
+  - **Gemma 2B**: Generates initial ideas and angles for the article
+  - **Mistral**: Creates logical structure and outline
+  - **Zephyr 7B**: Transforms the outline into engaging prose
+  - **LLaMA 3**: Expands and refines into the final polished article
+- **Animated Transitions**: Smooth animations indicate progress through the chain
+- **Responsive Design**: Adapts to different screen sizes for optimal viewing on any device
+
+This enhancement makes the deterministic nature of the model chain transparent to users, providing insight into how each model contributes to the final output.
+
 ## New in v2.8
 
 ### AI Model Chaining for Longform Content

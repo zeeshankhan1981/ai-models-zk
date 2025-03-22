@@ -2,6 +2,14 @@
 
 All notable changes to the AverroesMind Multi-Model LLM Playground will be documented in this file.
 
+## [v2.9.1] - 2025-03-22
+
+### 🎨 UI Enhancements
+- Added visual model chain flow indicator to clearly show the 4-model process
+- Implemented real-time status tracking for each model in the chain
+- Added animated indicators to show active model during generation
+- Improved responsive design for mobile and tablet devices
+
 ## [v2.9] - 2025-03-22
 
 ### Added

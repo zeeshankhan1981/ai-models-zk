@@ -11,10 +11,19 @@ const ModelChainPanel = () => {
   const [error, setError] = useState('');
   const [characterCount, setCharacterCount] = useState(0);
   const [history, setHistory] = useState([]);
+  const [activeModelIndex, setActiveModelIndex] = useState(-1);
   const CHARACTER_LIMIT = 200;
   
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
+
+  // Model chain configuration
+  const modelChain = [
+    { id: 'gemma', name: 'Gemma 2B', role: 'Ideas', description: 'Generates initial angles and ideas' },
+    { id: 'mistral', name: 'Mistral', role: 'Structure', description: 'Creates logical outline and structure' },
+    { id: 'zephyr', name: 'Zephyr 7B', role: 'Draft', description: 'Transforms outline into engaging prose' },
+    { id: 'llama3', name: 'LLaMA 3', role: 'Polish', description: 'Expands and refines into final article' }
+  ];
 
   // Load history from localStorage
   useEffect(() => {
@@ -84,6 +93,7 @@ const ModelChainPanel = () => {
     setError('');
     setOutputs({ gemma: '', mistral: '', zephyr: '', llama3: '' });
     setFinalOutput('');
+    setActiveModelIndex(0); // Start with the first model
     console.log('Sending request to model chain endpoint with topic:', topic);
 
     try {
@@ -92,6 +102,7 @@ const ModelChainPanel = () => {
       console.log('Received response:', response.data);
       setOutputs(response.data.stages);
       setFinalOutput(response.data.finalOutput);
+      setActiveModelIndex(-1); // Reset active model when complete
       
       // Save to history
       saveHistory({
@@ -103,6 +114,7 @@ const ModelChainPanel = () => {
     } catch (err) {
       console.error('Error details:', err.response ? err.response.data : err.message);
       setError(`An error occurred: ${err.response ? err.response.data.error : err.message}`);
+      setActiveModelIndex(-1); // Reset active model on error
     } finally {
       setIsGenerating(false);
     }
@@ -114,10 +126,66 @@ const ModelChainPanel = () => {
     setOutputs({ gemma: '', mistral: '', zephyr: '', llama3: '' });
     setFinalOutput('');
     setError('');
+    setActiveModelIndex(-1);
+  };
+
+  // Determine if a model has output
+  const hasOutput = (modelId) => {
+    return outputs[modelId] && outputs[modelId].trim() !== '';
+  };
+
+  // Get the status of a model in the chain
+  const getModelStatus = (index) => {
+    if (!isGenerating) {
+      if (hasOutput(modelChain[index].id)) return 'complete';
+      return 'pending';
+    }
+    
+    if (index < activeModelIndex) return 'complete';
+    if (index === activeModelIndex) return 'active';
+    return 'pending';
   };
 
   return (
     <div className="chat-container">
+      {/* Model Chain Flow Indicator */}
+      <div className="model-chain-flow">
+        <h3>AI Model Chain</h3>
+        <p className="chain-description">Generating high-quality content through a 4-model deterministic process</p>
+        
+        <div className="chain-flow-container">
+          {modelChain.map((model, index) => (
+            <React.Fragment key={model.id}>
+              {/* Model node */}
+              <div className={`chain-model ${getModelStatus(index)}`}>
+                <div className="model-icon">{index + 1}</div>
+                <div className="model-info">
+                  <div className="model-name">{model.name}</div>
+                  <div className="model-role">{model.role}</div>
+                </div>
+                {getModelStatus(index) === 'complete' && (
+                  <div className="status-icon">✓</div>
+                )}
+                {getModelStatus(index) === 'active' && (
+                  <div className="status-icon pulsing">●</div>
+                )}
+              </div>
+              
+              {/* Connector line between models */}
+              {index < modelChain.length - 1 && (
+                <div className={`chain-connector ${
+                  getModelStatus(index) === 'complete' ? 'complete' : 
+                  getModelStatus(index) === 'active' ? 'active' : 'pending'
+                }`}>
+                  <div className="connector-line"></div>
+                  <div className="connector-arrow">→</div>
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
       <div className="chat-messages" ref={chatContainerRef}>
         {!finalOutput && !outputs.gemma && !isGenerating ? (
           <div className="empty-chat">
