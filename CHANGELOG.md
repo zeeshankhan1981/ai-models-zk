@@ -1,0 +1,48 @@
+# Changelog
+
+All notable changes to the AverroesMind Multi-Model LLM Playground will be documented in this file.
+
+## [v2.7] - 2025-03-22
+
+### Added
+- Model-specific prompt guides for all supported models
+- New PromptGuide component with toggle functionality
+- One-click copy for example prompts
+- Updated model IDs to match Ollama naming conventions
+
+### Fixed
+- API compatibility issues between client and server
+- Improved error handling for API requests
+- Enhanced message formatting for Ollama API
+- Fixed streaming response handling
+- Better error messages for failed requests
+
+### Changed
+- Updated README with prompt guide documentation
+- Improved UI for prompt guides with collapsible sections
+- Enhanced server-side logging for better debugging
+- Updated model descriptions and capabilities
+
+## [v2.6] - 2025-03-15
+
+### Added
+- Support for Llama 3 and Gemma 2B models
+- Enhanced model information panel
+- Improved error handling
+
+### Fixed
+- Streaming response issues
+- Model switching bugs
+- UI responsiveness on mobile devices
+
+## [v2.5] - 2025-03-01
+
+### Added
+- Dark/light mode toggle
+- Export chat history functionality
+- Character counter with model-specific limits
+
+### Fixed
+- Code syntax highlighting improvements
+- Markdown rendering issues
+- Response cleaning for special tokens

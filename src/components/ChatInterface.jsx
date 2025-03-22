@@ -5,6 +5,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import axios from 'axios';
 import './ChatInterface.css';
+import PromptGuide from './PromptGuide';
 
 const ChatInterface = ({ selectedModel, models }) => {
   const [messages, setMessages] = useState([]);
@@ -17,6 +18,7 @@ const ChatInterface = ({ selectedModel, models }) => {
   const [abortController, setAbortController] = useState(null);
   const [isStopped, setIsStopped] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [showPromptGuide, setShowPromptGuide] = useState(true);
   
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -188,6 +190,9 @@ const ChatInterface = ({ selectedModel, models }) => {
     
     if (!input.trim() || isStreaming) return;
     
+    // Get the current model
+    const currentModel = models.find(m => m.id === selectedModel) || {};
+    
     // Add user message
     const userMessage = { role: 'user', content: input };
     setMessages(prevMessages => [...prevMessages, userMessage]);
@@ -213,13 +218,17 @@ const ChatInterface = ({ selectedModel, models }) => {
       // Scroll to bottom to show the loading message
       setTimeout(() => scrollToBottom(), 50);
       
+      // Format messages for the API
+      const formattedMessages = [...messages, userMessage].map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      
       // Make API request
       const response = await axios.post('http://localhost:3001/api/chat/stream', {
-        messages: [...messages, userMessage].map(msg => ({
-          role: msg.role,
-          content: msg.content
-        })),
-        model: selectedModel,
+        modelId: selectedModel,
+        prompt: input, // Include both prompt and messages for compatibility
+        messages: formattedMessages,
         systemPrompt: currentModel.systemPrompt
       }, {
         signal: controller.signal,
@@ -247,56 +256,26 @@ const ChatInterface = ({ selectedModel, models }) => {
         }
       });
       
-      // Final update with complete response
-      if (response.status === 200 && !isStopped) {
-        setMessages(prevMessages => {
-          const updatedMessages = [...prevMessages];
-          const lastMessage = updatedMessages[updatedMessages.length - 1];
-          if (lastMessage && lastMessage.role === 'assistant') {
-            lastMessage.content = response.data;
-            lastMessage.model = currentModel.name || selectedModel;
-          }
-          return updatedMessages;
-        });
-      }
+      // Save the updated messages to history
+      setTimeout(() => saveChatHistory(), 500);
+      
     } catch (error) {
-      // Don't show error if request was aborted intentionally
-      if (error.name === 'AbortError' || error.name === 'CanceledError') {
-        setIsStopped(true);
-        setMessages(prevMessages => {
-          const updatedMessages = [...prevMessages];
-          const lastMessage = updatedMessages[updatedMessages.length - 1];
-          if (lastMessage && lastMessage.role === 'assistant') {
-            lastMessage.stopped = true;
-          }
-          return updatedMessages;
-        });
-        return;
-      }
-      
-      // Handle other errors
-      console.error('Error in chat request:', error);
-      setIsError(true);
-      
-      let errorMsg = 'An error occurred. Please try again or switch to a different model.';
-      if (error.response && error.response.data) {
-        errorMsg = error.response.data.error || errorMsg;
-      } else if (error.message) {
-        errorMsg = error.message;
-      }
-      
-      setErrorMessage(errorMsg);
+      console.error('API request error:', error);
       
       // Update the last message to show the error
       setMessages(prevMessages => {
         const updatedMessages = [...prevMessages];
         const lastMessage = updatedMessages[updatedMessages.length - 1];
         if (lastMessage && lastMessage.role === 'assistant') {
-          lastMessage.content = errorMsg;
-          lastMessage.error = true;
+          lastMessage.content = error.response?.data?.error || error.message || 'An error occurred';
+          lastMessage.isError = true;
         }
         return updatedMessages;
       });
+      
+      setIsError(true);
+      setErrorMessage(error.response?.data?.error || error.message || 'An error occurred');
+      
     } finally {
       setIsStreaming(false);
       setAbortController(null);
@@ -336,6 +315,7 @@ const ChatInterface = ({ selectedModel, models }) => {
 
   return (
     <div className="chat-container">
+      <PromptGuide modelId={selectedModel} visible={showPromptGuide} />
       <div 
         className="chat-messages" 
         ref={chatContainerRef}

@@ -10,10 +10,12 @@ AverroesMind is a modern, elegant, and feature-rich interface for interacting wi
 - **Multiple Model Selection**: Choose from a variety of models including Mistral, DeepSeek, StarCoder2, Zephyr, Phi-2, WizardMath, and MetaMath
 - **GPU/CPU Indicators**: Clear labeling of which models require GPU acceleration and which can run efficiently on CPU
 - **Model Information Panel**: Detailed information about each model including capabilities, temperature settings, and character limits
+- **Prompt Engineering Guides**: Each model comes with tailored prompting tips and example prompts to help you get the best results
 
 ### Chat Experience
 - **Real-time Streaming Responses**: See model responses as they're generated character by character
 - **Stop Generation Mid-Response**: Interrupt model responses at any point if you have the information you need
+- **Model-Specific Prompt Guides**: Access tailored prompting tips and examples for each model to get better results
 - **Syntax Highlighting**: Beautiful code highlighting for programming responses
 - **Markdown Support**: Rich text formatting with full markdown rendering
 - **Character Counter**: Visual indicator of input length with configurable limits per model
@@ -108,6 +110,18 @@ The application uses a RESTful API architecture with endpoints for:
 | Phi-2 | Small but powerful general model | General, Instruction, Efficiency | No | 1500 | 0.7 | 0.9 | 40 |
 | WizardMath | Specialized for math problems | Math, Reasoning, Problem-solving | Yes | 1500 | 0.5 | 0.95 | 40 |
 | MetaMath | Advanced mathematical reasoning | Math, Reasoning, Formal-logic | Yes | 1500 | 0.5 | 0.95 | 40 |
+
+## New in v2.7
+
+### Model-Specific Prompt Guides
+The latest version introduces model-specific prompt guides to help users craft more effective prompts for each AI model:
+
+- **Best Use Cases**: Learn what tasks each model excels at
+- **Prompting Tips**: Get tailored advice on how to structure prompts for each model
+- **Example Prompts**: Copy and use example prompts that work well with specific models
+- **One-Click Copy**: Easily copy example prompts to the chat input with a single click
+
+The prompt guides are accessible directly in the chat interface and provide valuable insights into how to get the best results from each model. This feature helps users understand the unique capabilities and optimal prompting patterns for different AI models.
 
 ## GPU Acceleration
 

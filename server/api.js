@@ -20,15 +20,15 @@ const CPU_OPTIMIZATION = {
 
 // Define model ports
 const MODEL_PORTS = {
-  mistral: 11434,
-  deepseek: 11434,
-  starcoder2: 11434,
-  'zephyr-7b': 11434,
-  metamath: 11434,
-  'phi-2': 11434,
-  'llama2': 11434,
-  codellama: 11434,
-  'llama3': 11434,
+  'mistral:latest': 11434,
+  'deepseek:latest': 11434,
+  'starcoder2:latest': 11434,
+  'zephyr-7b:latest': 11434,
+  'metamath:latest': 11434,
+  'phi-2:latest': 11434,
+  'llama2:latest': 11434,
+  'llama2:chat': 11434,
+  'llama3:latest': 11434,
   'gemma:2b': 11434
 };
 
@@ -40,7 +40,7 @@ const getModelPort = (modelId) => {
 // Define available models
 const models = [
   {
-    id: 'mistral',
+    id: 'mistral:latest',
     name: 'Mistral 7B',
     description: 'Mistral 7B is a state-of-the-art language model with 7 billion parameters, offering an excellent balance between performance and efficiency. It excels at general-purpose tasks including summarization, question answering, and creative writing, while maintaining fast inference speeds on consumer hardware.',
     shortDescription: 'A well-balanced 7B model for general tasks with excellent instruction following',
@@ -54,7 +54,7 @@ const models = [
     systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information. Do not provide harmful, unethical, or illegal content."
   },
   {
-    id: 'deepseek',
+    id: 'deepseek:latest',
     name: 'DeepSeek Coder 6.7B',
     description: 'DeepSeek Coder is a specialized coding assistant trained on a vast corpus of code repositories. It excels at understanding programming concepts, generating efficient code solutions, and explaining complex algorithms. With support for over 40 programming languages including Python, JavaScript, Java, C++, and more, it can help with everything from simple scripts to complex software architecture.',
     shortDescription: 'Specialized for programming with support for 40+ languages',
@@ -68,7 +68,7 @@ const models = [
     systemPrompt: "You are a specialized coding assistant focused on helping with programming tasks. Provide clear, efficient, and well-documented code examples. Focus exclusively on programming-related questions and tasks. If asked about non-programming topics, politely explain that you're specialized in coding and programming. Always include comments in your code to explain complex logic, and provide explanations of how the code works when appropriate."
   },
   {
-    id: 'starcoder2',
+    id: 'starcoder2:latest',
     name: 'StarCoder2 3B',
     description: 'StarCoder2 is a cutting-edge code generation model developed by Hugging Face and ServiceNow. Built on a massive dataset of permissively licensed source code, it offers exceptional performance for code completion, generation, and understanding. With its deep knowledge of programming patterns and best practices, StarCoder2 can generate complex algorithms, refactor existing code, and provide detailed explanations of programming concepts. It runs efficiently on CPU with optimized settings.',
     shortDescription: 'Advanced code model with deep programming knowledge optimized for CPU',
@@ -82,7 +82,7 @@ const models = [
     systemPrompt: "You are an expert programming assistant specialized in code generation and software development. Focus exclusively on providing detailed, efficient, and well-structured code solutions. When asked about code or programming concepts, provide thorough explanations with examples. If asked about non-programming topics, politely explain that you're specialized in software development and can best help with programming-related questions. Always include proper error handling and follow best practices for the language you're working with."
   },
   {
-    id: 'zephyr-7b',
+    id: 'zephyr-7b:latest',
     name: 'Zephyr 7B',
     description: 'Zephyr 7B is a refined language model specifically tuned for conversational AI and instruction following. Built upon the Mistral 7B architecture, it has been further enhanced through RLHF (Reinforcement Learning from Human Feedback) to produce more helpful, harmless, and honest responses. Zephyr excels at natural dialogue, creative writing, and providing thoughtful answers to complex questions while maintaining a conversational tone.',
     shortDescription: 'Conversational model with enhanced instruction following capabilities',
@@ -96,22 +96,8 @@ const models = [
     systemPrompt: "You are a helpful, conversational assistant designed to provide thoughtful and engaging responses. Always be respectful, ethical, and appropriate in your answers. If you don't know something, admit it rather than making up information. If a question is unclear, ask for clarification. Avoid providing harmful, illegal, unethical or deceptive information. Focus on being helpful while maintaining safety and ethical standards."
   },
   {
-    id: 'metamath',
-    name: 'MetaMath 7B',
-    description: 'MetaMath is a specialized model fine-tuned for mathematical reasoning and problem-solving. Trained on a diverse collection of mathematical content including textbooks, research papers, and step-by-step solutions, it excels at breaking down complex problems into logical steps. MetaMath can handle various domains including algebra, calculus, statistics, and discrete mathematics, making it ideal for educational purposes and tackling challenging mathematical questions. It uses GPU acceleration for optimal performance.',
-    shortDescription: 'Math specialist with step-by-step problem solving capabilities',
-    tags: ['Math', 'Problem-solving'],
-    temperature: 0.3,  // Low temperature for precise math solutions
-    top_p: 0.95,
-    top_k: 50,
-    num_predict: 768,
-    characterLimit: 24000,
-    requiresGPU: true,
-    systemPrompt: "You are a mathematics expert assistant focused EXCLUSIVELY on mathematical topics. You MUST ONLY respond to questions related to mathematics, such as algebra, calculus, statistics, geometry, number theory, and mathematical logic. If a user asks about ANY non-mathematical topic, politely explain that you are a specialized mathematics assistant and can only help with math-related questions. NEVER provide responses about medical issues, personal relationships, politics, or any other non-mathematical topics. Your purpose is to provide clear, step-by-step solutions to mathematical problems and explain mathematical concepts."
-  },
-  {
-    id: 'phi-2',
-    name: 'Phi-2 2.7B',
+    id: 'phi-2:latest',
+    name: 'Phi-2',
     description: 'Phi-2 is a compact yet powerful 2.7 billion parameter language model developed by Microsoft Research. Despite its small size, it demonstrates remarkable reasoning capabilities and knowledge retention. Trained on a carefully curated dataset of high-quality web data and synthetic examples, Phi-2 excels at common sense reasoning, basic math, and simple coding tasks while being efficient enough to run on consumer hardware without GPU acceleration.',
     shortDescription: 'Compact but powerful model with strong reasoning capabilities',
     tags: ['General', 'Reasoning', 'Efficiency'],
@@ -124,7 +110,21 @@ const models = [
     systemPrompt: "You are a helpful, concise assistant with strong reasoning capabilities. Provide clear and accurate responses to questions, focusing on being factual and logical. If you're unsure about something, acknowledge your uncertainty rather than making up information. Keep your responses concise and to the point. Always be respectful, appropriate, and ethical in your responses."
   },
   {
-    id: 'llama2',
+    id: 'metamath:latest',
+    name: 'MetaMath',
+    description: 'MetaMath is a specialized model fine-tuned for mathematical reasoning and problem-solving. Trained on a diverse collection of mathematical content including textbooks, research papers, and step-by-step solutions, it excels at breaking down complex problems into logical steps. MetaMath can handle various domains including algebra, calculus, statistics, and discrete mathematics, making it ideal for educational purposes and tackling challenging mathematical questions. It uses GPU acceleration for optimal performance.',
+    shortDescription: 'Math specialist with step-by-step problem solving capabilities',
+    tags: ['Math', 'Problem-solving'],
+    temperature: 0.3,  // Low temperature for precise math solutions
+    top_p: 0.95,
+    top_k: 50,
+    num_predict: 768,
+    characterLimit: 24000,
+    requiresGPU: true,
+    systemPrompt: "You are a mathematics expert assistant focused EXCLUSIVELY on mathematical topics. You MUST ONLY respond to questions related to mathematics, such as algebra, calculus, statistics, geometry, number theory, and mathematical logic. If a user asks about ANY non-mathematical topic, politely explain that you are a specialized mathematics assistant and can only help with math-related questions. NEVER provide responses about medical issues, personal relationships, politics, or any other non-mathematical topics. Your purpose is to provide clear, step-by-step solutions to mathematical problems and explain mathematical concepts."
+  },
+  {
+    id: 'llama2:latest',
     name: 'Llama 2 7B',
     description: 'Llama 2 is Meta\'s next-generation open-source large language model, offering improved performance and safety compared to its predecessor. With 7 billion parameters, it provides a good balance between capability and efficiency, making it suitable for a wide range of applications including content generation, summarization, and conversational AI. Optimized for CPU usage, it can run effectively without GPU acceleration.',
     shortDescription: 'Meta\'s versatile open-source model with balanced performance',
@@ -138,7 +138,7 @@ const models = [
     systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
   },
   {
-    id: 'llama3',
+    id: 'llama3:latest',
     name: 'Llama 3 8B',
     description: 'Llama 3 is Meta\'s latest open-source large language model, offering significant improvements in reasoning, coding, and instruction following compared to Llama 2. With 8 billion parameters, it provides enhanced performance while maintaining efficiency, making it suitable for a wide range of applications including content generation, creative writing, and conversational AI.',
     shortDescription: 'Meta\'s latest model with improved reasoning and instruction following',
@@ -343,37 +343,67 @@ app.post('/api/chat', async (req, res) => {
 // Streaming chat endpoint
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { modelId, prompt, systemPrompt } = req.body;
+    console.log('Received chat request:', JSON.stringify(req.body, null, 2));
+    const { modelId, prompt, messages, systemPrompt } = req.body;
     
-    if (!modelId || !prompt) {
-      return res.status(400).json({ error: 'Model ID and prompt are required' });
+    // Support both direct prompt and messages array
+    if ((!modelId && !req.body.model) || (!prompt && (!messages || !Array.isArray(messages) || messages.length === 0))) {
+      console.error('Missing required parameters:', { 
+        hasModelId: !!modelId, 
+        hasModel: !!req.body.model, 
+        hasPrompt: !!prompt, 
+        hasMessages: !!messages && Array.isArray(messages) && messages.length > 0
+      });
+      return res.status(400).json({ error: 'Model ID and either prompt or messages are required' });
     }
     
-    const model = models.find(m => m.id === modelId);
+    // Support both modelId and model parameter names for compatibility
+    const modelIdentifier = modelId || req.body.model;
+    console.log(`Using model identifier: ${modelIdentifier}`);
+    
+    const model = models.find(m => m.id === modelIdentifier);
     if (!model) {
-      return res.status(404).json({ error: `Model ${modelId} not found` });
+      console.error(`Model not found: ${modelIdentifier}`);
+      console.log('Available models:', models.map(m => m.id));
+      return res.status(404).json({ error: `Model ${modelIdentifier} not found` });
     }
     
-    console.log(`Processing streaming chat request for model: ${modelId}`);
+    console.log(`Processing streaming chat request for model: ${modelIdentifier}`);
     
     // Set up streaming response
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Transfer-Encoding', 'chunked');
     
     try {
+      // Prepare messages for Ollama API
+      let ollama_messages = [];
+      
+      // Add system message
+      ollama_messages.push({
+        role: 'system',
+        content: systemPrompt || model.systemPrompt || 'You are a helpful assistant.'
+      });
+      
+      // Add user messages from history if provided
+      if (messages && Array.isArray(messages) && messages.length > 0) {
+        // Filter out any messages with empty content
+        ollama_messages = ollama_messages.concat(
+          messages.filter(msg => msg && msg.role && msg.content)
+        );
+      } else if (prompt) {
+        // Add single user message if no history provided
+        ollama_messages.push({
+          role: 'user',
+          content: prompt
+        });
+      }
+      
+      console.log('Sending messages to Ollama:', JSON.stringify(ollama_messages, null, 2));
+      
       // Make request to Ollama with streaming
       const response = await axios.post(`${OLLAMA_API}/chat`, {
-        model: modelId,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt || model.systemPrompt || 'You are a helpful assistant.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
+        model: modelIdentifier,
+        messages: ollama_messages,
         options: {
           temperature: model.temperature || 0.7,
           top_p: model.top_p || 0.9,
@@ -401,42 +431,34 @@ app.post('/api/chat/stream', async (req, res) => {
                 hasStartedResponse = true;
                 res.write(data.message.content);
               }
-            } catch (parseError) {
-              console.error('Error parsing streaming chunk:', parseError.message);
-              // If we can't parse the line, just send it as is
-              if (line.trim()) {
-                hasStartedResponse = true;
-                res.write(line);
-              }
+            } catch (jsonError) {
+              console.error('Error parsing JSON from stream:', jsonError);
             }
           }
         } catch (chunkError) {
-          console.error('Error processing chunk:', chunkError.message);
+          console.error('Error processing chunk:', chunkError);
         }
       });
       
       response.data.on('end', () => {
         if (!hasStartedResponse) {
-          // If no response was sent, send a fallback
           res.write("I'm sorry, I couldn't generate a response. Please try again or try a different question.");
         }
         res.end();
       });
       
-      response.data.on('error', (err) => {
-        console.error('Stream error:', err.message);
-        if (!hasStartedResponse) {
-          res.write("I'm sorry, there was an error processing your request. Please try again.");
-        }
+      response.data.on('error', (error) => {
+        console.error('Stream error:', error);
+        res.write("\nError during streaming response. Please try again.");
         res.end();
       });
+      
     } catch (apiError) {
-      console.error('Ollama API streaming error:', apiError.message);
-      res.write(`Error from Ollama API: ${apiError.message}`);
-      res.end();
+      console.error('Ollama API error:', apiError);
+      return res.status(500).json({ error: `Error from Ollama API: ${apiError.message || 'Unknown error'}` });
     }
   } catch (error) {
-    console.error('Error in streaming chat request:', error.message || error);
+    console.error('Error in chat request:', error);
     
     // Check for specific error types and provide better error messages
     if (error.code === 'ECONNREFUSED') {
