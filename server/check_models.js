@@ -1,13 +1,10 @@
 // Script to check which models are available in Ollama
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const fs = require('fs').promises;
+const path = require('path');
 
 const execAsync = promisify(exec);
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function checkModelAvailability() {
   try {
@@ -61,6 +58,17 @@ async function updateModelsConfig() {
       // Special case for codellama
       if (modelId === 'codellama' && (availableModels.includes('codellama') || 
           availableModels.includes('codellama-7b-code'))) {
+        return true;
+      }
+      
+      // Special case for llama3
+      if (modelId === 'llama3' && availableModels.includes('llama3')) {
+        return true;
+      }
+      
+      // Special case for zephyr
+      if (modelId === 'zephyr-7b' && (availableModels.includes('zephyr-7b') || 
+          availableModels.includes('zephyr'))) {
         return true;
       }
       
