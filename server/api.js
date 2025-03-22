@@ -25,7 +25,8 @@ const MODEL_PORTS = {
   starcoder2: 11434,
   'zephyr-7b': 11434,
   metamath: 11434,
-  'phi-2': 11434
+  'phi-2': 11434,
+  'llama2': 11434
 };
 
 // Function to get the port for a specific model
@@ -118,6 +119,20 @@ const models = [
     characterLimit: 1000,
     requiresGPU: false,
     systemPrompt: "You are a helpful, concise assistant with strong reasoning capabilities. Provide clear and accurate responses to questions, focusing on being factual and logical. If you're unsure about something, acknowledge your uncertainty rather than making up information. Keep your responses concise and to the point. Always be respectful, appropriate, and ethical in your responses."
+  },
+  {
+    id: 'llama2',
+    name: 'Llama 2',
+    description: 'Llama 2 is Meta\'s next-generation open-source large language model, offering improved performance and safety compared to its predecessor. With 7 billion parameters, it provides a good balance between capability and efficiency, making it suitable for a wide range of applications including content generation, summarization, and conversational AI. Optimized for CPU usage, it can run effectively without GPU acceleration.',
+    shortDescription: 'Meta\'s versatile open-source model with balanced performance',
+    tags: ['General', 'Instruction-following', 'CPU-Optimized'],
+    temperature: 0.7,
+    top_p: 0.9,
+    top_k: 40,
+    num_predict: 512,
+    characterLimit: 1500,
+    requiresGPU: false,
+    systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
   }
 ];
 
