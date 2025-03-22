@@ -10,10 +10,14 @@ const ModelChainPanel = () => {
   const [finalOutput, setFinalOutput] = useState('');
   const [error, setError] = useState('');
   const [characterCount, setCharacterCount] = useState(0);
+  const [wordCount, setWordCount] = useState(0);
   const [history, setHistory] = useState([]);
   const [activeModelIndex, setActiveModelIndex] = useState(-1);
   const [showModelDetails, setShowModelDetails] = useState(null);
+  const [qualityCheck, setQualityCheck] = useState('');
+  const [showQualityCheck, setShowQualityCheck] = useState(false);
   const CHARACTER_LIMIT = 200;
+  const WORD_LIMIT = 750;
   
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -67,6 +71,23 @@ const ModelChainPanel = () => {
     }
   }, []);
 
+  // Calculate word count when final output changes
+  useEffect(() => {
+    if (finalOutput) {
+      const words = finalOutput.trim().split(/\s+/);
+      setWordCount(words.length);
+    } else {
+      setWordCount(0);
+    }
+  }, [finalOutput]);
+
+  // Scroll to bottom when new content is added
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [outputs, finalOutput]);
+
   // Save history to localStorage
   const saveHistory = (newArticle) => {
     try {
@@ -93,7 +114,7 @@ const ModelChainPanel = () => {
       articleText += `Gemma (Ideas):\n${outputs.gemma}\n\n`;
       articleText += `Mistral (Outline):\n${outputs.mistral}\n\n`;
       articleText += `Zephyr (Draft):\n${outputs.zephyr}\n\n`;
-      articleText += `LLaMA 3 (Final Article):\n${finalOutput}\n\n`;
+      articleText += `LLaMA 3 (Final Article - ${wordCount} words):\n${finalOutput}\n\n`;
       
       const blob = new Blob([articleText], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -122,6 +143,8 @@ const ModelChainPanel = () => {
     setError('');
     setOutputs({ gemma: '', mistral: '', zephyr: '', llama3: '' });
     setFinalOutput('');
+    setQualityCheck('');
+    setShowQualityCheck(false);
     setActiveModelIndex(0); // Start with the first model
     console.log('Sending request to model chain endpoint with topic:', topic);
 
@@ -143,6 +166,12 @@ const ModelChainPanel = () => {
       console.log('Received response:', response.data);
       setOutputs(response.data.stages);
       setFinalOutput(response.data.finalOutput);
+      
+      // Set quality check if available
+      if (response.data.qualityCheck) {
+        setQualityCheck(response.data.qualityCheck);
+      }
+      
       setActiveModelIndex(-1); // Reset active model when complete
       
       // Save to history
@@ -150,7 +179,8 @@ const ModelChainPanel = () => {
         topic,
         timestamp: new Date().toISOString(),
         outputs: response.data.stages,
-        finalOutput: response.data.finalOutput
+        finalOutput: response.data.finalOutput,
+        wordCount: response.data.finalOutput.trim().split(/\s+/).length
       });
     } catch (err) {
       console.error('Error details:', err.response ? err.response.data : err.message);
@@ -161,11 +191,18 @@ const ModelChainPanel = () => {
     }
   };
 
+  const toggleQualityCheck = () => {
+    setShowQualityCheck(!showQualityCheck);
+  };
+
   const clearArticle = () => {
     setTopic('');
     setCharacterCount(0);
+    setWordCount(0);
     setOutputs({ gemma: '', mistral: '', zephyr: '', llama3: '' });
     setFinalOutput('');
+    setQualityCheck('');
+    setShowQualityCheck(false);
     setError('');
     setActiveModelIndex(-1);
     setShowModelDetails(null);
@@ -208,7 +245,7 @@ const ModelChainPanel = () => {
             transition={{ duration: 0.5 }}
           >
             <h3>Generate an Article</h3>
-            <p>Enter a topic below to generate a comprehensive article using our AI model chain</p>
+            <p>Enter a topic below to generate a concise, persuasive editorial (max 750 words)</p>
             <div className="model-chain-illustration">
               {modelChain.map((model, index) => (
                 <div key={model.id} className="illustration-model">
@@ -298,8 +335,23 @@ const ModelChainPanel = () => {
                 <div className="message-header">
                   <div className="message-role">
                     <span className="model-emoji">{modelChain[3].icon}</span> LLaMA 3 <span className="model-badge">Final Article</span>
+                    <span className="word-count-badge">
+                      <span className={wordCount > WORD_LIMIT ? 'limit-exceeded' : ''}>
+                        {wordCount} / {WORD_LIMIT} words
+                      </span>
+                    </span>
                   </div>
+                  {qualityCheck && (
+                    <div className="quality-check-toggle" onClick={toggleQualityCheck}>
+                      <span>{showQualityCheck ? 'Hide' : 'Show'} Quality Check</span>
+                    </div>
+                  )}
                 </div>
+                {showQualityCheck && qualityCheck && (
+                  <div className="quality-check">
+                    <p><strong>Quality Assessment:</strong> {qualityCheck}</p>
+                  </div>
+                )}
                 <div className="message-content">
                   <p>{finalOutput}</p>
                 </div>
@@ -314,7 +366,7 @@ const ModelChainPanel = () => {
         <form className="chat-input-wrapper" onSubmit={handleGenerate}>
           <textarea
             className="chat-textarea"
-            placeholder="Enter a topic for your article..."
+            placeholder="What topic would you like an editorial about? (e.g., 'The ethics of AI in surveillance', 'Censorship in India', etc.)"
             value={topic}
             onChange={handleInputChange}
             disabled={isGenerating}
@@ -341,6 +393,7 @@ const ModelChainPanel = () => {
         <div className="chat-options">
           <span className={`character-count ${characterCount > CHARACTER_LIMIT ? 'limit-exceeded' : ''}`}>
             {characterCount}/{CHARACTER_LIMIT}
+            <span className="limit-note">(Your article will be up to 750 words)</span>
           </span>
           
           <div className="action-buttons">

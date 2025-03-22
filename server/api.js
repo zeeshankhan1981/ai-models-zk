@@ -577,16 +577,76 @@ async function runModelChain(topic) {
   const mistralPrompt = `Pick one of the following ideas and create a structured outline with key arguments and examples:\n${gemma}`;
   const mistral = await queryModel('mistral:latest', mistralPrompt);
 
-  const zephyrPrompt = `Transform this outline into a persuasive op-ed with emotional clarity:\n${mistral}`;
+  const zephyrPrompt = `Transform this outline into a persuasive op-ed with emotional clarity and logical flow:\n${mistral}`;
   const zephyr = await queryModel('zephyr-7b:latest', zephyrPrompt);
 
-  const llama3Prompt = `Expand this draft into a professional 1000-word opinion piece:\n${zephyr}`;
+  const llama3Prompt = `You are a seasoned editorial writer.
+
+Write an engaging op-ed based on the draft below. Improve clarity, structure, and tone. The final piece must:
+- Be **no more than 750 words**
+- Have a clear thesis and three supporting arguments
+- End with a memorable conclusion
+- Use persuasive language throughout
+
+Rewrite the following:
+
+${zephyr}`;
+
   const llama3 = await queryModel('llama3:latest', llama3Prompt);
+  
+  // Post-process to ensure we don't exceed 750 words
+  const trimmedOutput = trimTo750Words(llama3);
+
+  // Optional: Add a quality check step
+  const qualityCheck = await performQualityCheck(trimmedOutput, topic);
 
   return {
-    finalOutput: llama3,
-    stages: { gemma, mistral, zephyr, llama3 }
+    finalOutput: trimmedOutput,
+    stages: { gemma, mistral, zephyr, llama3: trimmedOutput },
+    qualityCheck
   };
+}
+
+// Function to trim text to 750 words
+function trimTo750Words(text) {
+  const words = text.split(/\s+/);
+  if (words.length <= 750) return text;
+  
+  // If we need to trim, try to find a good sentence ending
+  const trimmed = words.slice(0, 750).join(' ');
+  
+  // Look for the last sentence ending (., !, ?)
+  const lastPeriod = Math.max(
+    trimmed.lastIndexOf('. '),
+    trimmed.lastIndexOf('! '),
+    trimmed.lastIndexOf('? ')
+  );
+  
+  if (lastPeriod !== -1 && lastPeriod > trimmed.length * 0.8) {
+    // Only trim at sentence boundary if we're at least 80% into the text
+    return trimmed.substring(0, lastPeriod + 1);
+  }
+  
+  return trimmed;
+}
+
+// Function to perform a quality check on the generated article
+async function performQualityCheck(article, topic) {
+  try {
+    const checkPrompt = `
+Does the following article stay on-topic about "${topic}", use persuasive tone, and stay under 750 words?
+
+Article:
+${article}
+
+Reply with YES or NO and a 2-sentence critique.`;
+
+    const response = await queryModel('mistral:latest', checkPrompt);
+    return response;
+  } catch (error) {
+    console.error('Error performing quality check:', error);
+    return 'Quality check unavailable';
+  }
 }
 
 // Function to query a model with a prompt
@@ -615,7 +675,7 @@ async function queryModel(modelId, prompt) {
       temperature: 0.7,
       top_p: 0.9,
       top_k: 40,
-      num_predict: 2048 // Longest for final article
+      num_predict: 1536 // Reduced from 2048 to target ~750 words
     }
   };
 
@@ -647,10 +707,10 @@ async function queryModel(modelId, prompt) {
 
 // Hardcoded system prompts for each model
 const SYSTEM_PROMPTS = {
-  'gemma:2b': 'You generate brief, topical article ideas.',
-  'mistral:latest': 'You are a structured researcher creating outlines and evidence.',
-  'zephyr-7b:latest': 'You rewrite text for tone, persuasion, and human readability.',
-  'llama3:latest': 'You are a seasoned editorial writer producing fully polished articles.'
+  'gemma:2b': 'You generate brief, topical article ideas. Be creative and diverse in your suggestions.',
+  'mistral:latest': 'You are a structured researcher creating outlines with clear thesis, supporting arguments, and evidence.',
+  'zephyr-7b:latest': 'You rewrite text for tone, persuasion, and human readability. Focus on creating a coherent flow between paragraphs.',
+  'llama3:latest': 'You are a seasoned editorial writer producing fully polished articles. Your articles must be concise (maximum 750 words), persuasive, and have excellent structure with a clear thesis, supporting arguments, and memorable conclusion.'
 };
 
 app.listen(PORT, () => {

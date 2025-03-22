@@ -2,6 +2,23 @@
 
 All notable changes to the AverroesMind Multi-Model LLM Playground will be documented in this file.
 
+## [v2.10.0] - 2025-03-24
+
+### ✨ Model Chain Enhancements
+- Added 750-word limit enforcement for final article outputs
+- Improved LLaMA 3 prompt to generate more concise, structured content
+- Added word count display for final articles
+- Implemented quality check layer using Mistral to verify article coherence
+- Enhanced system prompts for all models in the chain for better quality
+- Added post-processing to ensure articles end at sentence boundaries
+
+### 🎨 UI Improvements
+- Updated input placeholder with clearer examples for article topics
+- Added word count badge to show current/maximum word count
+- Implemented quality check toggle to view article assessment
+- Enhanced styling for final output with better visual hierarchy
+- Added note about 750-word limit in the input area
+
 ## [v2.9.1] - 2025-03-22
 
 ### 🎨 UI Enhancements

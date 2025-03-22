@@ -465,3 +465,83 @@
     flex-wrap: wrap;
   }
 }
+
+/* Word count badge styles */
+.word-count-badge {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  background-color: var(--secondary-background);
+  color: var(--secondary-text);
+}
+
+.word-count-badge .limit-exceeded {
+  color: var(--error-color);
+  font-weight: bold;
+}
+
+/* Quality check toggle and display */
+.quality-check-toggle {
+  cursor: pointer;
+  margin-left: auto;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background-color: var(--secondary-background);
+  color: var(--accent-color);
+  transition: background-color 0.2s ease;
+}
+
+.quality-check-toggle:hover {
+  background-color: var(--hover-background);
+}
+
+.quality-check {
+  margin-top: 8px;
+  padding: 10px;
+  background-color: var(--secondary-background);
+  border-left: 3px solid var(--accent-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Improved message header for better layout with word count */
+.message-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Final output styling enhancements */
+.final-output {
+  border-left: 4px solid var(--accent-color);
+  background-color: rgba(var(--accent-rgb), 0.05);
+}
+
+/* Character count limit note */
+.limit-note {
+  margin-left: 8px;
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+  font-style: italic;
+}
+
+/* Empty chat improvements */
+.empty-chat p {
+  max-width: 500px;
+  margin: 0 auto 20px;
+  text-align: center;
+  color: var(--secondary-text);
+  line-height: 1.5;
+}
+
+/* Make the textarea placeholder more readable */
+.chat-textarea::placeholder {
+  color: var(--placeholder-color, #888);
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
