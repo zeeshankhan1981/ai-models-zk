@@ -159,6 +159,141 @@ Regular maintenance tasks:
    rm -rf ~/.ollama/models/*
    ```
 
+## Deployment Lessons Learned (v3.0.0+)
+
+After our experience deploying v3.0.0, we've documented the following critical steps to ensure smooth deployments:
+
+### Node.js Version Requirements
+
+AverroesMind v3.0.0+ requires Node.js 20.x. To ensure the correct version:
+
+```bash
+# Install NVM if not already installed
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+
+# Install and use Node.js 20
+nvm install 20
+nvm use 20
+node --version  # Should show v20.x.x
+```
+
+### Proper HTTPS Configuration
+
+The application requires proper HTTPS configuration. Here's the correct Nginx setup:
+
+```nginx
+# /etc/nginx/sites-available/averroesmind.xyz
+server {
+    listen 80;
+    server_name averroesmind.xyz www.averroesmind.xyz;
+    
+    # Redirect HTTP to HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name averroesmind.xyz www.averroesmind.xyz;
+    
+    ssl_certificate /etc/letsencrypt/live/averroesmind.xyz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/averroesmind.xyz/privkey.pem;
+    
+    # SSL configuration
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 180m;
+    
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Increase timeouts for long-running requests
+        proxy_read_timeout 300;
+        proxy_connect_timeout 300;
+        proxy_send_timeout 300;
+    }
+}
+```
+
+After creating this file, enable it and reload Nginx:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/averroesmind.xyz /etc/nginx/sites-enabled/
+sudo nginx -t  # Test configuration
+sudo systemctl reload nginx
+```
+
+### Deployment Script
+
+For future deployments, use the following improved deployment script:
+
+```bash
+#!/bin/bash
+# production-deploy.sh - Improved deployment script for AverroesMind v3.0.0+
+
+set -e  # Exit on any error
+
+echo "🚀 Starting AverroesMind deployment..."
+
+# 1. SSH into server
+ssh factoura << 'EOF'
+  cd /var/www/averroesmind.xyz
+
+  # 2. Pull latest changes
+  git pull
+
+  # 3. Ensure correct Node.js version
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  nvm use 20 || (echo "Installing Node.js 20..." && nvm install 20 && nvm use 20)
+  echo "Now using Node.js version: $(node --version)"
+
+  # 4. Install dependencies
+  echo "Installing dependencies..."
+  npm install
+
+  # 5. Build the application
+  echo "Building application..."
+  npm run build
+
+  # 6. Restart the application
+  echo "Restarting application..."
+  pm2 restart averroesmind || pm2 start npm --name "averroesmind" -- start
+
+  # 7. Check Nginx configuration
+  echo "Verifying Nginx configuration..."
+  sudo nginx -t && sudo systemctl reload nginx
+
+  echo "✅ Deployment completed successfully!"
+EOF
+
+echo "🎉 Deployment process finished!"
+```
+
+### Deployment Checklist
+
+Before deploying a new version, ensure:
+
+1. All changes are committed and pushed to the repository
+2. The application builds successfully locally
+3. SSL certificates are valid and not expired
+4. PM2 is configured with the correct memory limits
+5. Ollama is running with CPU optimizations
+
+Following these steps will help avoid common deployment issues and ensure a smooth deployment process.
+
 ## Backup Strategy
 
 Regularly backup your data:
