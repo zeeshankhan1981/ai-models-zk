@@ -111,6 +111,48 @@ The application uses a RESTful API architecture with endpoints for:
 | WizardMath | Specialized for math problems | Math, Reasoning, Problem-solving | Yes | 1500 | 0.5 | 0.95 | 40 |
 | MetaMath | Advanced mathematical reasoning | Math, Reasoning, Formal-logic | Yes | 1500 | 0.5 | 0.95 | 40 |
 
+## New in v2.9
+
+### Enhanced Model Chain Experience
+
+Version 2.9 introduces significant improvements to the AI Model Chaining feature, focusing on user experience and interface consistency:
+
+- **Redesigned UI**: The model chain interface now matches the design and experience of the regular chat interface, providing a seamless transition between modes
+- **Interactive Message Display**: Each model's output is displayed in the same animated, card-based format as the chat interface
+- **Model Role Badges**: Clear visual indicators showing each model's specific role in the generation process
+- **Article Management**:
+  - **Save Article**: Export the complete article with all intermediate outputs as a text file
+  - **Clear Article**: Reset the current generation to start fresh
+  - **Automatic History**: Articles are automatically saved to local storage for future reference
+- **Input Controls**:
+  - **Character Counter**: Visual indicator showing topic length with configurable limits
+  - **Responsive Textarea**: Auto-expanding input field for longer topic descriptions
+- **Error Handling**:
+  - **Detailed Error Messages**: Clear explanations when issues occur during generation
+  - **Visual Error Indicators**: Distinct styling for error states
+  - **Improved Recovery**: Better handling of connection and model availability issues
+
+This update enhances the user experience by providing a more consistent interface across the application while adding powerful new features for managing generated content.
+
+## New in v2.8
+
+### AI Model Chaining for Longform Content
+
+The latest version introduces a powerful model chaining feature that leverages multiple AI models in sequence to generate high-quality longform content:
+
+- **Deterministic 4-Model Chain**: Uses a fixed sequence of models (gemma:2b → mistral:latest → zephyr-7b:latest → llama3:latest) to generate articles
+- **Specialized Model Roles**:
+  - **Gemma 2B**: Generates multiple topic angles
+  - **Mistral**: Chooses one angle and structures it logically
+  - **Zephyr**: Transforms the structure into emotionally engaging prose
+  - **LLaMA 3**: Expands and polishes into a complete article
+
+- **Simple Interface**: Enter a topic and get a fully developed article
+- **Process Transparency**: View outputs from each stage of the generation process
+- **Toggle Between Modes**: Easily switch between regular chat and model chain modes
+
+This feature is designed to be deterministic and secure, with fixed system prompts and a predefined execution flow to ensure consistent, high-quality results.
+
 ## New in v2.7
 
 ### Model-Specific Prompt Guides

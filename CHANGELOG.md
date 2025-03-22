@@ -2,6 +2,21 @@
 
 All notable changes to the AverroesMind Multi-Model LLM Playground will be documented in this file.
 
+## [v2.9] - 2025-03-22
+
+### Added
+- Enhanced Model Chain UI to match the chat interface design
+- Added Save Article functionality to export generated content
+- Added Clear Article functionality to reset the current generation
+- Implemented article history management with localStorage
+- Added character count and limit indicators for topic input
+- Improved error handling and display in the Model Chain interface
+
+### Fixed
+- Fixed API endpoint URL configuration for model chain requests
+- Improved error message extraction and display
+- Enhanced response validation for model chain outputs
+
 ## [v2.8] - 2025-03-22
 
 ### Added

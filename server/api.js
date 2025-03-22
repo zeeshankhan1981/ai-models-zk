@@ -554,6 +554,7 @@ app.get('/api/diagnostics', async (req, res) => {
 
 // Endpoint for model chaining
 app.post('/api/chain/gemma-mistral-zephyr-llama3', async (req, res) => {
+  console.log('Model chain endpoint called with topic:', req.body.topic);
   try {
     const { topic } = req.body;
     if (typeof topic !== 'string' || topic.length > 200) {
@@ -590,20 +591,58 @@ async function runModelChain(topic) {
 
 // Function to query a model with a prompt
 async function queryModel(modelId, prompt) {
-  const response = await axios.post(`${OLLAMA_API}/chat`, {
-    model: modelId,
-    messages: [{ role: 'system', content: SYSTEM_PROMPTS[modelId] }, { role: 'user', content: prompt }],
-    options: {
+  // Define model-specific parameters
+  const modelParams = {
+    'gemma:2b': {
+      temperature: 0.6,
+      top_p: 0.9,
+      top_k: 40,
+      num_predict: 256 // Shorter output for initial ideas
+    },
+    'mistral:latest': {
       temperature: 0.7,
       top_p: 0.9,
       top_k: 40,
-      num_predict: 512
+      num_predict: 512 // Medium length for outline
     },
-    ...CPU_OPTIMIZATION,
-    stream: false
-  });
+    'zephyr-7b:latest': {
+      temperature: 0.75,
+      top_p: 0.9,
+      top_k: 40,
+      num_predict: 768 // Longer for draft
+    },
+    'llama3:latest': {
+      temperature: 0.7,
+      top_p: 0.9,
+      top_k: 40,
+      num_predict: 2048 // Longest for final article
+    }
+  };
 
-  return response.data.message.content.trim();
+  // Use model-specific parameters or fallback to defaults
+  const params = modelParams[modelId] || {
+    temperature: 0.7,
+    top_p: 0.9,
+    top_k: 40,
+    num_predict: 512
+  };
+
+  try {
+    const response = await axios.post(`${OLLAMA_API}/chat`, {
+      model: modelId,
+      messages: [{ role: 'system', content: SYSTEM_PROMPTS[modelId] }, { role: 'user', content: prompt }],
+      options: {
+        ...params,
+        ...CPU_OPTIMIZATION,
+      },
+      stream: false
+    });
+
+    return response.data.message.content.trim();
+  } catch (error) {
+    console.error(`Error querying model ${modelId}:`, error.message);
+    throw new Error(`Failed to generate content with ${modelId}: ${error.message}`);
+  }
 }
 
 // Hardcoded system prompts for each model
