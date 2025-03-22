@@ -1,7 +1,7 @@
 .chat-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
   overflow: hidden;
   background-color: var(--bg-primary);
   max-width: 1000px;
@@ -19,8 +19,8 @@
   gap: 0;
   scroll-behavior: smooth;
   width: 100%;
-  padding-bottom: 120px; /* Space for input */
-  height: calc(100vh - 200px);
+  padding-bottom: 160px; /* Increased space for input */
+  height: calc(100vh - 80px); /* Adjusted height */
   overscroll-behavior: contain; /* Prevent scroll chaining */
   position: relative;
   will-change: transform; /* Optimize for scrolling performance */
@@ -425,7 +425,7 @@ input:checked + .toggle-slider:before {
 @media (max-width: 768px) {
   .chat-messages {
     padding: 1rem;
-    height: calc(100vh - 180px);
+    height: calc(100vh - 160px);
   }
   
   .message {
@@ -443,4 +443,34 @@ input:checked + .toggle-slider:before {
   .action-buttons {
     flex-wrap: wrap;
   }
+}
+
+/* Scroll to bottom button */
+.scroll-to-bottom {
+  position: fixed;
+  bottom: 140px;
+  right: 20px;
+  background-color: var(--accent-color);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 20;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.scroll-to-bottom.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-to-bottom:hover {
+  background-color: #2563eb;
 }
