@@ -29,7 +29,7 @@ const MODEL_PORTS = {
   'llama2': 11434,
   codellama: 11434,
   'llama3': 11434,
-  'gemma': 11434
+  'gemma:2b': 11434
 };
 
 // Function to get the port for a specific model
@@ -152,7 +152,7 @@ const models = [
     systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
   },
   {
-    id: 'gemma',
+    id: 'gemma:2b',
     name: 'Gemma 2B',
     description: 'Gemma 2B is a lightweight yet capable language model developed by Google. Despite its small size of only 2 billion parameters, it offers impressive performance for general tasks, coding, and creative writing. Optimized for efficiency, it can run smoothly on consumer hardware without GPU acceleration, making it ideal for applications where resources are limited but quality responses are still required.',
     shortDescription: 'Google\'s efficient 2B model with balanced capabilities',
