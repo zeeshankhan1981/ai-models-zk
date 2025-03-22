@@ -231,15 +231,26 @@ app.get('/api/models/check', async (req, res) => {
       return res.status(500).json({ error: 'Failed to get models from Ollama' });
     }
     
-    const availableModels = response.data.models.map(model => model.name.split(':')[0]);
+    // Get the full model names from Ollama
+    const availableModels = response.data.models.map(model => model.name);
     console.log('Available models in Ollama:', availableModels);
     
     // Check which of our configured models are available
-    const modelStatus = models.map(model => ({
-      id: model.id,
-      name: model.name,
-      available: availableModels.includes(model.id)
-    }));
+    const modelStatus = models.map(model => {
+      // For models with colons, check if the exact name exists
+      // Otherwise, check if the base name exists (for backward compatibility)
+      const isAvailable = availableModels.some(availableModel => 
+        availableModel === model.id || // Exact match
+        availableModel.startsWith(`${model.id}:`) || // Model with tag
+        model.id.includes(':') && availableModel === model.id.split(':')[0] // Handle special case for models with colons
+      );
+      
+      return {
+        id: model.id,
+        name: model.name,
+        available: isAvailable
+      };
+    });
     
     res.json({ models: modelStatus });
   } catch (error) {
