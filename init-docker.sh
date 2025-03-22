@@ -53,6 +53,37 @@ server {
 }
 EOF
 
+# Create a specific Ollama Modelfile for CPU optimization
+echo "⚙️ Creating Ollama Modelfiles for CPU optimization..."
+mkdir -p modelfiles
+
+# Mistral Modelfile with CPU optimization
+cat > modelfiles/Mistral << EOF
+FROM mistral
+PARAMETER num_ctx 2048
+PARAMETER num_thread 14
+PARAMETER num_batch 512
+PARAMETER cpu_only true
+EOF
+
+# Phi-2 Modelfile with CPU optimization
+cat > modelfiles/Phi << EOF
+FROM phi:2
+PARAMETER num_ctx 2048
+PARAMETER num_thread 14
+PARAMETER num_batch 512
+PARAMETER cpu_only true
+EOF
+
+# Codellama Modelfile with CPU optimization
+cat > modelfiles/Codellama << EOF
+FROM codellama:7b-code
+PARAMETER num_ctx 2048
+PARAMETER num_thread 14
+PARAMETER num_batch 512
+PARAMETER cpu_only true
+EOF
+
 # Start Nginx container for initial certificate acquisition
 echo "🚀 Starting Nginx container for initial certificate acquisition..."
 docker-compose up -d nginx
@@ -73,12 +104,17 @@ cp nginx/conf.d/averroesmind.conf nginx/conf.d/init.conf
 echo "🚀 Starting all services..."
 docker-compose up -d
 
-# Pull required Ollama models
-echo "📦 Pulling required Ollama models..."
-docker-compose exec ollama ollama pull llama2
+# Pull and create CPU-optimized models
+echo "📦 Pulling and creating CPU-optimized models..."
 docker-compose exec ollama ollama pull mistral
-docker-compose exec ollama ollama pull codellama
-docker-compose exec ollama ollama pull phi
+docker-compose exec ollama ollama pull phi:2
+docker-compose exec ollama ollama pull llama2
+docker-compose exec ollama ollama pull codellama:7b-code
+
+echo "📦 Creating CPU-optimized models from Modelfiles..."
+docker-compose exec ollama ollama create mistral-cpu -f /root/.ollama/modelfiles/Mistral
+docker-compose exec ollama ollama create phi-cpu -f /root/.ollama/modelfiles/Phi
+docker-compose exec ollama ollama create codellama-cpu -f /root/.ollama/modelfiles/Codellama
 
 echo "🎉 Docker deployment initialized successfully!"
 echo "🌐 Your application will be available at: https://$DOMAIN"
@@ -86,7 +122,8 @@ echo ""
 echo "📝 Next steps:"
 echo "1. Make sure your DNS is configured to point to this server"
 echo "2. Check if the SSL certificate was issued correctly"
-echo "3. If you need to add more Ollama models, use: docker-compose exec ollama ollama pull <model_name>"
+echo "3. Monitor system performance with: docker stats"
+echo "4. Check Ollama logs with: docker-compose logs -f ollama"
 echo ""
 echo "🔄 To restart the services: docker-compose restart"
 echo "🛑 To stop the services: docker-compose down"

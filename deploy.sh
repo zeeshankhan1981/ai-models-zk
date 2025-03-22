@@ -44,8 +44,8 @@ if ! command -v pm2 &> /dev/null; then
   npm install -g pm2
 fi
 
-# Create PM2 ecosystem file
-echo "⚙️ Creating PM2 ecosystem file..."
+# Create PM2 ecosystem file with CPU optimization
+echo "⚙️ Creating PM2 ecosystem file with CPU optimization..."
 cat > /var/www/$DOMAIN/ecosystem.config.js << EOF
 module.exports = {
   apps: [{
@@ -54,14 +54,46 @@ module.exports = {
     instances: 1,
     autorestart: true,
     watch: false,
-    max_memory_restart: "1G",
+    max_memory_restart: "48G",
     env: {
       NODE_ENV: "production",
-      PORT: 3000
-    }
+      PORT: 3000,
+      OLLAMA_HOST: "0.0.0.0",
+      OLLAMA_NUM_THREADS: "14",
+      OLLAMA_NUM_CPU: "16",
+      OLLAMA_CPU_ONLY: "true"
+    },
+    node_args: "--max-old-space-size=8192"
   }]
 };
 EOF
+
+# Configure Ollama for CPU optimization
+echo "⚙️ Configuring Ollama for CPU optimization..."
+if [ -f "/etc/systemd/system/ollama.service" ]; then
+  sudo cp /etc/systemd/system/ollama.service /etc/systemd/system/ollama.service.bak
+  sudo tee /etc/systemd/system/ollama.service > /dev/null << EOF
+[Unit]
+Description=Ollama Service
+After=network-online.target
+
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0"
+Environment="OLLAMA_NUM_THREADS=14"
+Environment="OLLAMA_NUM_CPU=16"
+Environment="OLLAMA_CPU_ONLY=true"
+ExecStart=/usr/local/bin/ollama serve
+Restart=always
+RestartSec=3
+User=root
+
+[Install]
+WantedBy=default.target
+EOF
+
+  sudo systemctl daemon-reload
+  sudo systemctl restart ollama
+fi
 
 # Create Nginx configuration
 echo "⚙️ Creating Nginx configuration..."
@@ -77,6 +109,11 @@ server {
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host \$host;
         proxy_cache_bypass \$http_upgrade;
+        
+        # Increase timeouts for long-running requests
+        proxy_read_timeout 300;
+        proxy_connect_timeout 300;
+        proxy_send_timeout 300;
     }
 }
 EOF
@@ -106,12 +143,19 @@ pm2 save
 echo "⚙️ Setting up PM2 to start on boot..."
 pm2 startup
 
+# Pull CPU-optimized models
+echo "📦 Pulling CPU-optimized models..."
+ollama pull mistral
+ollama pull phi:2
+ollama pull llama2
+OLLAMA_CPU_ONLY=true ollama pull codellama:7b-code
+
 echo "🎉 Deployment complete!"
 echo "📝 Next steps:"
 echo "1. Set up SSL with Let's Encrypt using: sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN"
 echo "2. Make sure your DNS is configured to point to this server"
-echo "3. Ensure Ollama is installed and running on the server"
-echo "4. Pull the required models using: ollama pull <model_name>"
+echo "3. Monitor system performance with: htop"
+echo "4. Check Ollama logs with: journalctl -u ollama -f"
 
 # Print access information
 echo "🌐 Your application will be available at: http://$DOMAIN"

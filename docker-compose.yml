@@ -27,6 +27,17 @@ services:
       - "11434:11434"
     volumes:
       - ollama-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_NUM_THREADS=14
+      - OLLAMA_NUM_CPU=16
+      - OLLAMA_CPU_ONLY=true
+    deploy:
+      resources:
+        limits:
+          memory: 48G
+        reservations:
+          memory: 16G
     networks:
       - averroesmind-network
 

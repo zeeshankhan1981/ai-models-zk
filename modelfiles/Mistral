@@ -1,0 +1,5 @@
+FROM mistral
+PARAMETER num_ctx 2048
+PARAMETER num_thread 14
+PARAMETER num_batch 512
+PARAMETER cpu_only true

@@ -10,6 +10,14 @@ app.use(express.json());
 // Ollama API endpoint
 const OLLAMA_API = 'http://localhost:11434/api';
 
+// CPU optimization settings for Ollama
+const CPU_OPTIMIZATION = {
+  num_thread: 14,  // Optimized for Ryzen 7
+  num_ctx: 2048,   // Reduced context window for better performance
+  num_batch: 512,  // Batch size for inference
+  cpu_only: true   // Force CPU usage
+};
+
 // Define model ports
 const MODEL_PORTS = {
   mistral: 11434,
@@ -32,7 +40,7 @@ const models = [
     name: 'Mistral',
     description: 'Mistral 7B is a state-of-the-art language model with 7 billion parameters, offering an excellent balance between performance and efficiency. It excels at general-purpose tasks including summarization, question answering, and creative writing, while maintaining fast inference speeds on consumer hardware.',
     shortDescription: 'A well-balanced 7B model for general tasks with excellent instruction following',
-    tags: ['General', 'Instruction-following'],
+    tags: ['General', 'Instruction-following', 'CPU-Optimized'],
     temperature: 0.7,
     top_p: 0.9,
     top_k: 40,
@@ -58,15 +66,15 @@ const models = [
   {
     id: 'starcoder2',
     name: 'StarCoder2',
-    description: 'StarCoder2 is a cutting-edge code generation model developed by Hugging Face and ServiceNow. Built on a massive dataset of permissively licensed source code, it offers exceptional performance for code completion, generation, and understanding. With its deep knowledge of programming patterns and best practices, StarCoder2 can generate complex algorithms, refactor existing code, and provide detailed explanations of programming concepts. It leverages GPU acceleration for faster inference.',
-    shortDescription: 'Advanced code model with deep programming knowledge and GPU acceleration',
-    tags: ['Coding', 'Programming'],
+    description: 'StarCoder2 is a cutting-edge code generation model developed by Hugging Face and ServiceNow. Built on a massive dataset of permissively licensed source code, it offers exceptional performance for code completion, generation, and understanding. With its deep knowledge of programming patterns and best practices, StarCoder2 can generate complex algorithms, refactor existing code, and provide detailed explanations of programming concepts. It runs efficiently on CPU with optimized settings.',
+    shortDescription: 'Advanced code model with deep programming knowledge optimized for CPU',
+    tags: ['Coding', 'Programming', 'CPU-Optimized'],
     temperature: 0.4,  // Even lower temperature for more deterministic code
     top_p: 0.95,
     top_k: 40,
-    num_predict: 1024, // Higher token limit for code
+    num_predict: 768, // Reduced from 1024 for better CPU performance
     characterLimit: 1000,
-    requiresGPU: true,
+    requiresGPU: false, // Changed to false for CPU compatibility
     systemPrompt: "You are an expert programming assistant specialized in code generation and software development. Focus exclusively on providing detailed, efficient, and well-structured code solutions. When asked about code or programming concepts, provide thorough explanations with examples. If asked about non-programming topics, politely explain that you're specialized in software development and can best help with programming-related questions. Always include proper error handling and follow best practices for the language you're working with."
   },
   {
@@ -234,7 +242,8 @@ app.post('/api/chat', async (req, res) => {
           top_p: model.top_p || 0.9,
           top_k: model.top_k || 40,
           num_predict: model.num_predict || 512
-        }
+        },
+        ...CPU_OPTIMIZATION // Apply CPU optimization settings
       }, {
         timeout: 60000 // 60 second timeout
       });
@@ -314,6 +323,7 @@ app.post('/api/chat/stream', async (req, res) => {
           top_k: model.top_k || 40,
           num_predict: model.num_predict || 512
         },
+        ...CPU_OPTIMIZATION, // Apply CPU optimization settings
         stream: true
       }, {
         responseType: 'stream',
@@ -416,7 +426,8 @@ app.get('/api/diagnostics', async (req, res) => {
               options: {
                 temperature: 0.7,
                 num_predict: 50
-              }
+              },
+              ...CPU_OPTIMIZATION // Apply CPU optimization settings
             },
             timeout: 5000 // 5 second timeout
           });
