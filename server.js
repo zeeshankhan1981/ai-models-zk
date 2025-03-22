@@ -6,7 +6,7 @@ import { createServer } from 'http';
 
 // Import api.js using CommonJS compatibility approach
 import pkg from './server/api.js';
-const { models, getResponse, streamResponse, checkModelAvailability, getAvailableModels } = pkg;
+const { models, getResponse, streamResponse, checkModelAvailability, getAvailableModels, runModelChain } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +33,23 @@ app.get('/api/models/available', async (req, res) => {
   } catch (error) {
     console.error('Error fetching available models:', error);
     res.status(500).json({ error: 'Failed to fetch available models' });
+  }
+});
+
+app.get('/api/chain/gemma-mistral-zephyr-llama3', async (req, res) => {
+  const { topic } = req.query;
+  
+  if (!topic) {
+    return res.status(400).json({ error: 'Topic is required' });
+  }
+  
+  try {
+    const result = await runModelChain(topic);
+    res.json(result);
+  } catch (error) {
+    console.error('Error in model chain:', error);
+    const errorMessage = error.message || 'Failed to run model chain';
+    res.status(500).json({ error: errorMessage });
   }
 });
 
