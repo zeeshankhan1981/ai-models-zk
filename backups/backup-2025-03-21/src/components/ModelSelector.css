@@ -43,27 +43,15 @@
 
 .capability-badge {
   display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 1rem;
+  font-size: 0.65rem;
   font-weight: 500;
   color: white;
-  margin-right: 4px;
-}
-
-.gpu-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  color: white;
-  margin-right: 4px;
-  font-weight: 500;
-  background-color: #ef4444;
 }
 
 .more-badge {
-  background-color: #6b7280;
+  background-color: var(--text-tertiary);
 }
 
 .dropdown-arrow {
@@ -123,6 +111,22 @@
 .model-option-name {
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.gpu-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.75rem;
+  color: white;
+}
+
+.gpu-required {
+  background-color: #ef4444; /* Red for GPU */
+}
+
+.cpu-only {
+  background-color: #10b981; /* Green for CPU */
 }
 
 .model-option-description {

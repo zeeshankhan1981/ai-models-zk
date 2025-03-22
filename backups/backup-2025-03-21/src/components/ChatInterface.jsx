@@ -13,7 +13,6 @@ const ChatInterface = ({ selectedModel, models }) => {
   const [useStreaming, setUseStreaming] = useState(true);
   const [abortController, setAbortController] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [modelAvailability, setModelAvailability] = useState({});
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   
@@ -37,112 +36,52 @@ const ChatInterface = ({ selectedModel, models }) => {
     }
   }, [input]);
 
-  // Check model availability when component mounts
+  // Load chat history from localStorage on component mount
   useEffect(() => {
-    checkModelAvailability();
-  }, []);
-
-  // Check model availability when selected model changes
-  useEffect(() => {
-    if (selectedModel && !modelAvailability[selectedModel]) {
-      checkModelAvailability();
+    const savedMessages = localStorage.getItem(`chat_history_${selectedModel}`);
+    if (savedMessages) {
+      try {
+        const parsedMessages = JSON.parse(savedMessages);
+        // Only set messages if there's actual content
+        if (parsedMessages && parsedMessages.length > 0) {
+          setMessages(parsedMessages);
+        }
+      } catch (error) {
+        console.error('Error parsing saved messages:', error);
+        // If there's an error parsing, clear the corrupted storage
+        localStorage.removeItem(`chat_history_${selectedModel}`);
+      }
     }
   }, [selectedModel]);
 
-  // Reset streaming state when model changes
-  useEffect(() => {
-    // If we're in the middle of a streaming response, abort it
-    if (abortController) {
-      abortController.abort();
-      setAbortController(null);
-    }
-    
-    // Reset streaming response
-    setStreamingResponse('');
-    setIsLoading(false);
-    
-    // Load chat history for this model from localStorage
-    loadChatHistory();
-  }, [selectedModel]);
-
-  // Check which models are available in Ollama
-  const checkModelAvailability = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/models/check');
-      if (!response.ok) {
-        console.error('Failed to check model availability');
-        return;
-      }
-      
-      const data = await response.json();
-      
-      if (data.models) {
-        const availability = {};
-        data.models.forEach(model => {
-          availability[model.id] = model.available;
-        });
-        
-        setModelAvailability(availability);
-        console.log('Model availability:', availability);
-      }
-    } catch (error) {
-      console.error('Error checking model availability:', error);
-    }
-  };
-
-  // Load chat history from localStorage
-  const loadChatHistory = () => {
-    try {
-      const savedMessages = localStorage.getItem(`chat_history_${selectedModel}`);
-      if (savedMessages) {
-        setMessages(JSON.parse(savedMessages));
-      } else {
-        setMessages([]);
-      }
-    } catch (error) {
-      console.error('Error loading messages from localStorage:', error);
-      setMessages([]);
-    }
-  };
-
-  // Effect to save chat history when messages change
+  // Save chat history to localStorage when messages change
   useEffect(() => {
     if (messages.length > 0) {
-      saveChatHistory();
+      try {
+        localStorage.setItem(`chat_history_${selectedModel}`, JSON.stringify(messages));
+      } catch (error) {
+        console.error('Error saving messages to localStorage:', error);
+      }
     }
   }, [messages, selectedModel]);
 
-  // Function to clean model responses of formatting tokens
-  const cleanModelResponse = (response) => {
-    if (!response) return '';
-    
-    let cleaned = response;
-    
-    // Remove common formatting tokens
-    const formatTokens = [
-      /\[INST\].*?\[\/INST\]/gs,  // Instruction tokens
-      /<<SYS>>.*?<<\/SYS>>/gs,    // System tokens
-      /<s>|<\/s>/g,               // Start/end tokens
-      /<\|.*?\|>/g,               // Special tokens
-      /\[system\].*?\[\/system\]/gs, // System message tokens
-      /\[user\]|\[\/user\]/g,     // User tokens
-      /\[assistant\]|\[\/assistant\]/g, // Assistant tokens
+  const cleanModelResponse = (text) => {
+    // Remove common formatting tokens from model responses
+    const patterns = [
+      /\[INST\].*?\[\/INST\]/gs,
+      /<\/?s>/g,
+      /<<SYS>>.*?<\/SYS>/gs,
+      /<\|.*?\|>/g,
+      /\[\/INST\]/g,
+      /\[INST\]/g
     ];
     
-    formatTokens.forEach(token => {
-      cleaned = cleaned.replace(token, '');
+    let cleaned = text;
+    patterns.forEach(pattern => {
+      cleaned = cleaned.replace(pattern, '');
     });
     
-    // Trim whitespace
-    cleaned = cleaned.trim();
-    
-    // If cleaning resulted in an empty string, return the original
-    if (!cleaned) {
-      console.warn('Cleaning resulted in empty string, using original response');
-      return response.trim();
-    }
-    
-    return cleaned;
+    return cleaned.trim();
   };
 
   const handleInputChange = (e) => {
@@ -157,77 +96,43 @@ const ChatInterface = ({ selectedModel, models }) => {
   };
 
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+    e.preventDefault();
     
     if (input.trim() === '' || isLoading) return;
     
-    // Check if model is available
-    if (!modelAvailability[selectedModel]) {
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'user',
-          content: input,
-          timestamp: new Date().toISOString()
-        },
-        {
-          role: 'assistant',
-          content: `Error: The model "${currentModel.name}" is not available in Ollama. Please make sure it's installed or select a different model.`,
-          timestamp: new Date().toISOString(),
-          model: currentModel.name || selectedModel,
-          error: true
-        }
-      ]);
-      setInput('');
-      return;
-    }
+    const userMessage = {
+      role: 'user',
+      content: input.trim(),
+      timestamp: new Date().toISOString()
+    };
     
-    // Add user message to chat
-    setMessages(prev => [
-      ...prev,
-      {
-        role: 'user',
-        content: input,
-        timestamp: new Date().toISOString()
-      }
-    ]);
-    
-    const userPrompt = input;
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
+    setIsLoading(true);
     
     try {
       if (useStreaming) {
-        setIsLoading(true);
-        
-        // Start streaming response
-        await streamResponse(userPrompt);
+        await streamResponse(userMessage.content);
       } else {
-        setIsLoading(true);
-        
-        // Get complete response
-        const response = await getResponse(userPrompt);
-        
-        // Add assistant message to chat
+        await getResponse(userMessage.content);
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Error getting response:', error);
         setMessages(prev => [
           ...prev,
           {
             role: 'assistant',
-            content: response,
+            content: 'Sorry, there was an error processing your request. Please try again.',
             timestamp: new Date().toISOString(),
-            model: currentModel.name || selectedModel
+            model: currentModel.name
           }
         ]);
       }
-    } catch (error) {
-      console.error('Error in handleSubmit:', error.message || error);
-      
-      // Error is already handled in getResponse or streamResponse
     } finally {
       setIsLoading(false);
+      setStreamingResponse('');
       setAbortController(null);
-      
-      // Save chat history
-      saveChatHistory();
     }
   };
 
@@ -242,73 +147,30 @@ const ChatInterface = ({ selectedModel, models }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          modelId: selectedModel,
-          prompt: prompt,
-          systemPrompt: currentModel.systemPrompt
+          model: selectedModel,
+          prompt: prompt
         }),
         signal: controller.signal
       });
 
       if (!response.ok) {
-        let errorMessage = `HTTP error: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch (e) {
-          try {
-            const errorText = await response.text();
-            errorMessage = errorText || errorMessage;
-          } catch (textError) {
-            console.error('Error getting error text:', textError);
-          }
-        }
-        throw new Error(errorMessage);
+        throw new Error('Failed to get response');
       }
 
       const data = await response.json();
-      
-      if (!data.response || data.response.trim() === '') {
-        console.error('Empty response from API');
-        throw new Error('Received empty response from the model');
-      }
-      
-      // Clean the response before displaying
       const cleanedResponse = cleanModelResponse(data.response);
       
-      // Add assistant message to chat
       setMessages(prev => [
         ...prev,
         {
           role: 'assistant',
           content: cleanedResponse,
           timestamp: new Date().toISOString(),
-          model: currentModel.name || selectedModel
+          model: currentModel.name
         }
       ]);
-      
-      // Save chat history
-      saveChatHistory();
-      
-      return cleanedResponse;
     } catch (error) {
-      if (error.name === 'AbortError') {
-        // This is an expected abort, not an error
-        return;
-      }
-      console.error('Error in getResponse:', error.message || error);
-      
-      // Add error message to chat
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: `Error: ${error.message || 'An unexpected error occurred'}. Please try again.`,
-          timestamp: new Date().toISOString(),
-          model: currentModel.name || selectedModel,
-          error: true
-        }
-      ]);
-      
+      console.error('Error in getResponse:', error);
       throw error;
     }
   };
@@ -318,126 +180,50 @@ const ChatInterface = ({ selectedModel, models }) => {
       const controller = new AbortController();
       setAbortController(controller);
       
-      setStreamingResponse('');
-      
       const response = await fetch('http://localhost:3001/api/chat/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          modelId: selectedModel,
-          prompt: prompt,
-          systemPrompt: currentModel.systemPrompt
+          model: selectedModel,
+          prompt: prompt
         }),
         signal: controller.signal
       });
 
       if (!response.ok) {
-        let errorMessage = `HTTP error: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch (e) {
-          try {
-            const errorText = await response.text();
-            errorMessage = errorText || errorMessage;
-          } catch (textError) {
-            console.error('Error getting error text:', textError);
-          }
-        }
-        throw new Error(errorMessage);
+        throw new Error('Failed to get streaming response');
       }
-      
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      
       let done = false;
       let accumulatedResponse = '';
-      
+
       while (!done) {
-        try {
-          const { value, done: doneReading } = await reader.read();
-          done = doneReading;
-          
-          if (done) break;
-          
-          const chunk = decoder.decode(value);
-          accumulatedResponse += chunk;
-          
-          // Clean the response before displaying
-          const cleanedResponse = cleanModelResponse(accumulatedResponse);
-          setStreamingResponse(cleanedResponse);
-        } catch (readError) {
-          // Check if this is an abort error (user cancelled or navigated away)
-          if (readError.name === 'AbortError') {
-            console.log('Stream reading was aborted by user');
-            return; // Exit gracefully
-          }
-          
-          // For other errors, log but don't throw to allow the stream to continue if possible
-          console.error('Error reading stream chunk:', readError.message || readError);
-          
-          // Only throw fatal errors that would prevent continuing
-          if (readError.message !== 'The operation was aborted.' && 
-              readError.message !== 'The user aborted a request.') {
-            throw readError;
-          }
-        }
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        accumulatedResponse += chunk;
+        setStreamingResponse(cleanModelResponse(accumulatedResponse));
       }
-      
-      // Only add the complete response to messages if we haven't aborted
-      if (!controller.signal.aborted) {
-        const finalResponse = cleanModelResponse(accumulatedResponse);
-        
-        if (!finalResponse || finalResponse.trim() === '') {
-          console.error('Empty response after cleaning');
-          throw new Error('Received empty response from the model');
-        }
-        
-        // Add assistant message to chat
-        setMessages(prev => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: finalResponse,
-            timestamp: new Date().toISOString(),
-            model: currentModel.name || selectedModel
-          }
-        ]);
-        
-        // Reset streaming response
-        setStreamingResponse('');
-        
-        // Save chat history
-        saveChatHistory();
-      }
-    } catch (error) {
-      // Check if this is an abort error (user cancelled or navigated away)
-      if (error.name === 'AbortError' || 
-          error.message === 'The operation was aborted.' || 
-          error.message === 'The user aborted a request.') {
-        console.log('Stream request was aborted by user');
-        return; // Exit gracefully
-      }
-      
-      console.error('Error in streamResponse:', error.message || error);
-      
-      // Add error message to chat
+
+      // Add the complete response to messages
       setMessages(prev => [
         ...prev,
         {
           role: 'assistant',
-          content: `Error: ${error.message || 'An unexpected error occurred'}. Please try again.`,
+          content: cleanModelResponse(accumulatedResponse),
           timestamp: new Date().toISOString(),
-          model: currentModel.name || selectedModel,
-          error: true
+          model: currentModel.name
         }
       ]);
-      
-      // Reset streaming response
-      setStreamingResponse('');
-      
+    } catch (error) {
+      console.error('Error in streamResponse:', error);
       throw error;
     }
   };
@@ -454,7 +240,7 @@ const ChatInterface = ({ selectedModel, models }) => {
             role: 'assistant',
             content: streamingResponse,
             timestamp: new Date().toISOString(),
-            model: currentModel.name || selectedModel,
+            model: currentModel.name,
             stopped: true
           }
         ]);
@@ -467,9 +253,21 @@ const ChatInterface = ({ selectedModel, models }) => {
   };
 
   const clearHistory = () => {
+    // Clear messages from state
     setMessages([]);
+    
+    // Clear any streaming response
+    setStreamingResponse('');
+    
+    // Clear from localStorage
     localStorage.removeItem(`chat_history_${selectedModel}`);
-    console.log(`Cleared chat history for model: ${selectedModel}`);
+    
+    // Reset any loading or streaming states
+    setIsLoading(false);
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+    }
   };
 
   const saveConversation = () => {
@@ -503,14 +301,6 @@ const ChatInterface = ({ selectedModel, models }) => {
     }
   };
 
-  const saveChatHistory = () => {
-    try {
-      localStorage.setItem(`chat_history_${selectedModel}`, JSON.stringify(messages));
-    } catch (error) {
-      console.error('Error saving messages to localStorage:', error);
-    }
-  };
-
   return (
     <div className="chat-container">
       <div className="chat-messages" ref={messagesEndRef}>
@@ -524,7 +314,7 @@ const ChatInterface = ({ selectedModel, models }) => {
             {messages.map((message, index) => (
               <motion.div 
                 key={index} 
-                className={`message ${message.role === 'user' ? 'user-message' : 'assistant-message'} ${message.error ? 'error' : ''}`}
+                className={`message ${message.role === 'user' ? 'user-message' : 'assistant-message'}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -538,12 +328,9 @@ const ChatInterface = ({ selectedModel, models }) => {
                     {message.stopped && (
                       <span className="stopped-badge">Stopped</span>
                     )}
-                    {message.error && (
-                      <span className="stopped-badge">Error</span>
-                    )}
                   </span>
                 </div>
-                <div className={`message-content ${message.error ? 'error' : ''}`}>
+                <div className="message-content">
                   {message.role === 'assistant' ? (
                     <ReactMarkdown
                       components={{
@@ -575,49 +362,50 @@ const ChatInterface = ({ selectedModel, models }) => {
               </motion.div>
             ))}
             
-            {/* Only show streaming response if there's content and we're not loading a full response */}
-            {streamingResponse && isLoading && useStreaming && (
-              <motion.div 
-                className="message assistant-message streaming"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="message-header">
-                  <span className="message-role">
-                    Assistant
-                    {currentModel.name && (
+            {/* Streaming response */}
+            <AnimatePresence>
+              {streamingResponse && (
+                <motion.div 
+                  className="message assistant-message streaming"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="message-header">
+                    <span className="message-role">
+                      Assistant
                       <span className="model-badge">{currentModel.name}</span>
-                    )}
-                  </span>
-                </div>
-                <div className="message-content">
-                  <ReactMarkdown
-                    components={{
-                      code({node, inline, className, children, ...props}) {
-                        const match = /language-(\w+)/.exec(className || '');
-                        return !inline && match ? (
-                          <SyntaxHighlighter
-                            style={isDarkMode ? oneDark : oneLight}
-                            language={match[1]}
-                            PreTag="div"
-                            {...props}
-                          >
-                            {String(children).replace(/\n$/, '')}
-                          </SyntaxHighlighter>
-                        ) : (
-                          <code className={className} {...props}>
-                            {children}
-                          </code>
-                        );
-                      }
-                    }}
-                  >
-                    {streamingResponse}
-                  </ReactMarkdown>
-                </div>
-              </motion.div>
-            )}
+                    </span>
+                  </div>
+                  <div className="message-content">
+                    <ReactMarkdown
+                      components={{
+                        code({node, inline, className, children, ...props}) {
+                          const match = /language-(\w+)/.exec(className || '');
+                          return !inline && match ? (
+                            <SyntaxHighlighter
+                              style={isDarkMode ? oneDark : oneLight}
+                              language={match[1]}
+                              PreTag="div"
+                              {...props}
+                            >
+                              {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        }
+                      }}
+                    >
+                      {streamingResponse}
+                    </ReactMarkdown>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             
             {/* Loading indicator */}
             <AnimatePresence>
@@ -692,7 +480,7 @@ const ChatInterface = ({ selectedModel, models }) => {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder={`Message ${currentModel.name || 'Assistant'}...`}
-            disabled={isLoading || !modelAvailability[selectedModel]}
+            disabled={isLoading}
             rows={1}
             ref={textareaRef}
           />
@@ -707,7 +495,7 @@ const ChatInterface = ({ selectedModel, models }) => {
             </button>
           )}
           <div className="chat-options">
-            <span className={`character-count ${input.length > characterLimit ? 'limit-exceeded' : ''}`}>
+            <span className={`character-count ${input.length >= characterLimit ? 'limit-reached' : ''}`}>
               {input.length}/{characterLimit}
             </span>
           </div>
@@ -726,7 +514,7 @@ const ChatInterface = ({ selectedModel, models }) => {
             <button
               type="submit"
               className="send-button"
-              disabled={isLoading || input.trim() === '' || input.length > characterLimit || !modelAvailability[selectedModel]}
+              disabled={isLoading || input.trim() === '' || input.length > characterLimit}
             >
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

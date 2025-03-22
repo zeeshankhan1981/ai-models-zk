@@ -74,22 +74,19 @@ const ModelSelector = ({ models, selectedModel, onModelChange }) => {
           <div className="selected-model">
             <span className="model-name">{currentModel.name}</span>
             <div className="model-capabilities">
-              {currentModel.tags && currentModel.tags.slice(0, 2).map((tag, index) => (
+              {currentModel.capabilities && currentModel.capabilities.slice(0, 2).map((capability, index) => (
                 <span 
                   key={index} 
                   className="capability-badge"
-                  style={{ backgroundColor: getCapabilityColor(tag.toLowerCase()) }}
+                  style={{ backgroundColor: getCapabilityColor(capability) }}
                 >
-                  {tag}
+                  {capability}
                 </span>
               ))}
-              {currentModel.tags && currentModel.tags.length > 2 && (
+              {currentModel.capabilities && currentModel.capabilities.length > 2 && (
                 <span className="capability-badge more-badge">
-                  +{currentModel.tags.length - 2}
+                  +{currentModel.capabilities.length - 2}
                 </span>
-              )}
-              {currentModel.requiresGPU && (
-                <span className="gpu-badge">GPU</span>
               )}
             </div>
           </div>
@@ -128,21 +125,19 @@ const ModelSelector = ({ models, selectedModel, onModelChange }) => {
                 <div className="model-option-content">
                   <div className="model-option-header">
                     <span className="model-option-name">{model.name}</span>
-                    {model.requiresGPU && (
-                      <span className="gpu-badge">GPU</span>
-                    )}
+                    <span className={`gpu-badge ${model.requiresGPU ? 'gpu-required' : 'cpu-only'}`}>
+                      {model.requiresGPU ? 'GPU' : 'CPU'}
+                    </span>
                   </div>
-                  <p className="model-option-description">
-                    {model.shortDescription || model.description}
-                  </p>
+                  <p className="model-option-description">{model.description}</p>
                   <div className="model-option-capabilities">
-                    {model.tags && model.tags.map((tag, index) => (
+                    {model.capabilities && model.capabilities.map((capability, index) => (
                       <span 
                         key={index} 
                         className="capability-badge"
-                        style={{ backgroundColor: getCapabilityColor(tag.toLowerCase()) }}
+                        style={{ backgroundColor: getCapabilityColor(capability) }}
                       >
-                        {tag}
+                        {capability}
                       </span>
                     ))}
                   </div>

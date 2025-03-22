@@ -67,13 +67,13 @@ const ModelInfo = ({ model }) => {
           <p className="model-info-description">{model.description}</p>
           
           <div className="model-info-capabilities">
-            {model.tags && model.tags.map((tag, index) => (
+            {model.capabilities && model.capabilities.map((capability, index) => (
               <span 
                 key={index} 
                 className="capability-badge"
-                style={{ backgroundColor: getCapabilityColor(tag.toLowerCase()) }}
+                style={{ backgroundColor: getCapabilityColor(capability) }}
               >
-                {tag}
+                {capability}
               </span>
             ))}
           </div>

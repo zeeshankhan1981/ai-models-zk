@@ -20,11 +20,12 @@ fi
 # Define models with their ports and GPU settings
 declare -a models=(
     "mistral:8000:false"
-    "deepseek:8001:false"
+    "deepseek-coder:8001:false"
     "starcoder2:8002:true"
-    "zephyr-7b:8003:false"
+    "zephyr:8003:false"
+    "phi2:8004:false"
+    "wizardmath:8005:true"
     "metamath:8006:true"
-    "phi-2:8007:false"
 )
 
 # Start each model
