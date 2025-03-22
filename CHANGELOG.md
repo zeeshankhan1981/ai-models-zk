@@ -21,6 +21,12 @@ All notable changes to the AverroesMind Multi-Model LLM Playground will be docum
 
 ## [v2.9.2] - 2025-03-22
 
+### Enhancements
+- Improved text formatting in model chain outputs with proper Markdown rendering
+- Added model-specific styling for better visual distinction between outputs
+- Enhanced server-side formatting for consistent and well-structured content
+- Fixed React Markdown component implementation to follow latest API guidelines
+
 ### Added
 - Implemented streaming response for model chain to improve user experience
 - Added real-time feedback as each model in the chain completes its work

@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import rehypeSanitize from 'rehype-sanitize';
+import rehypeRaw from 'rehype-raw';
 import './ModelChainPanel.css';
 
 const ModelChainPanel = () => {
@@ -488,6 +491,7 @@ const ModelChainPanel = () => {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
                   className="message assistant-message"
+                  data-model="gemma"
                 >
                   <div className="message-header">
                     <div className="message-role">
@@ -500,7 +504,23 @@ const ModelChainPanel = () => {
                         <span></span><span></span><span></span>
                       </div>
                     ) : (
-                      <p>{outputs.gemma}</p>
+                      <ReactMarkdown 
+                        rehypePlugins={[rehypeSanitize, rehypeRaw]}
+                        components={{
+                          p: ({node, ...props}) => <p {...props} />,
+                          h1: ({node, ...props}) => <h1 {...props} />,
+                          h2: ({node, ...props}) => <h2 {...props} />,
+                          h3: ({node, ...props}) => <h3 {...props} />,
+                          ul: ({node, ...props}) => <ul {...props} />,
+                          ol: ({node, ...props}) => <ol {...props} />,
+                          li: ({node, ...props}) => <li {...props} />,
+                          a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+                          blockquote: ({node, ...props}) => <blockquote {...props} />,
+                          code: ({node, inline, ...props}) => inline ? <code {...props} /> : <pre><code {...props} /></pre>
+                        }}
+                      >
+                        {outputs.gemma}
+                      </ReactMarkdown>
                     )}
                   </div>
                 </motion.div>
@@ -517,6 +537,7 @@ const ModelChainPanel = () => {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
                   className="message assistant-message"
+                  data-model="mistral"
                 >
                   <div className="message-header">
                     <div className="message-role">
@@ -529,7 +550,23 @@ const ModelChainPanel = () => {
                         <span></span><span></span><span></span>
                       </div>
                     ) : (
-                      <p>{outputs.mistral}</p>
+                      <ReactMarkdown 
+                        rehypePlugins={[rehypeSanitize, rehypeRaw]}
+                        components={{
+                          p: ({node, ...props}) => <p {...props} />,
+                          h1: ({node, ...props}) => <h1 {...props} />,
+                          h2: ({node, ...props}) => <h2 {...props} />,
+                          h3: ({node, ...props}) => <h3 {...props} />,
+                          ul: ({node, ...props}) => <ul {...props} />,
+                          ol: ({node, ...props}) => <ol {...props} />,
+                          li: ({node, ...props}) => <li {...props} />,
+                          a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+                          blockquote: ({node, ...props}) => <blockquote {...props} />,
+                          code: ({node, inline, ...props}) => inline ? <code {...props} /> : <pre><code {...props} /></pre>
+                        }}
+                      >
+                        {outputs.mistral}
+                      </ReactMarkdown>
                     )}
                   </div>
                 </motion.div>
@@ -546,6 +583,7 @@ const ModelChainPanel = () => {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
                   className="message assistant-message"
+                  data-model="zephyr"
                 >
                   <div className="message-header">
                     <div className="message-role">
@@ -558,7 +596,23 @@ const ModelChainPanel = () => {
                         <span></span><span></span><span></span>
                       </div>
                     ) : (
-                      <p>{outputs.zephyr}</p>
+                      <ReactMarkdown 
+                        rehypePlugins={[rehypeSanitize, rehypeRaw]}
+                        components={{
+                          p: ({node, ...props}) => <p {...props} />,
+                          h1: ({node, ...props}) => <h1 {...props} />,
+                          h2: ({node, ...props}) => <h2 {...props} />,
+                          h3: ({node, ...props}) => <h3 {...props} />,
+                          ul: ({node, ...props}) => <ul {...props} />,
+                          ol: ({node, ...props}) => <ol {...props} />,
+                          li: ({node, ...props}) => <li {...props} />,
+                          a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+                          blockquote: ({node, ...props}) => <blockquote {...props} />,
+                          code: ({node, inline, ...props}) => inline ? <code {...props} /> : <pre><code {...props} /></pre>
+                        }}
+                      >
+                        {outputs.zephyr}
+                      </ReactMarkdown>
                     )}
                   </div>
                 </motion.div>
@@ -575,6 +629,7 @@ const ModelChainPanel = () => {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
                   className="message assistant-message final-output"
+                  data-model="llama3"
                 >
                   <div className="message-header">
                     <div className="message-role">
@@ -595,7 +650,15 @@ const ModelChainPanel = () => {
                   </div>
                   {showQualityCheck && qualityCheck && (
                     <div className="quality-check">
-                      <p><strong>Quality Assessment:</strong> {qualityCheck}</p>
+                      <ReactMarkdown 
+                        rehypePlugins={[rehypeSanitize, rehypeRaw]}
+                        components={{
+                          p: ({node, ...props}) => <p {...props} />,
+                          strong: ({node, ...props}) => <strong {...props} />
+                        }}
+                      >
+                        {`**Quality Assessment:** ${qualityCheck}`}
+                      </ReactMarkdown>
                     </div>
                   )}
                   <div className="message-content">
@@ -604,7 +667,23 @@ const ModelChainPanel = () => {
                         <span></span><span></span><span></span>
                       </div>
                     ) : (
-                      <p>{outputs.llama3 || finalOutput}</p>
+                      <ReactMarkdown 
+                        rehypePlugins={[rehypeSanitize, rehypeRaw]}
+                        components={{
+                          p: ({node, ...props}) => <p {...props} />,
+                          h1: ({node, ...props}) => <h1 {...props} />,
+                          h2: ({node, ...props}) => <h2 {...props} />,
+                          h3: ({node, ...props}) => <h3 {...props} />,
+                          ul: ({node, ...props}) => <ul {...props} />,
+                          ol: ({node, ...props}) => <ol {...props} />,
+                          li: ({node, ...props}) => <li {...props} />,
+                          a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+                          blockquote: ({node, ...props}) => <blockquote {...props} />,
+                          code: ({node, inline, ...props}) => inline ? <code {...props} /> : <pre><code {...props} /></pre>
+                        }}
+                      >
+                        {outputs.llama3 || finalOutput}
+                      </ReactMarkdown>
                     )}
                   </div>
                 </motion.div>

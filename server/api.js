@@ -221,6 +221,75 @@ function cleanModelResponse(text) {
   return cleaned;
 }
 
+// Helper function to format model output for better markdown rendering
+const formatModelOutput = (output, modelType) => {
+  let formattedOutput = output.trim();
+  
+  // Format based on model type
+  switch (modelType) {
+    case 'gemma:2b':
+      // Ensure ideas are properly formatted with markdown
+      if (!formattedOutput.includes('**')) {
+        // If no markdown formatting exists, add it
+        const ideas = formattedOutput.split(/\n+/).filter(line => line.trim());
+        if (ideas.length > 0) {
+          formattedOutput = ideas.map((idea, index) => `**${index + 1}.** ${idea.replace(/^\d+\.?\s*/, '')}`).join('\n\n');
+        }
+      }
+      break;
+      
+    case 'mistral:latest':
+      // Ensure outline has proper heading structure
+      if (!formattedOutput.includes('##')) {
+        const lines = formattedOutput.split(/\n+/);
+        const formattedLines = lines.map(line => {
+          // Convert main headings
+          if (/^[IVX]+\.\s/.test(line)) {
+            return `## ${line}`;
+          }
+          // Convert subheadings
+          else if (/^[A-Z]\.\s/.test(line)) {
+            return `### ${line}`;
+          }
+          // Convert numbered points
+          else if (/^\d+\.\s/.test(line)) {
+            return `- ${line}`;
+          }
+          return line;
+        });
+        formattedOutput = formattedLines.join('\n\n');
+      }
+      break;
+      
+    case 'zephyr-7b:latest':
+      // Ensure paragraphs are properly spaced
+      formattedOutput = formattedOutput.replace(/\n{3,}/g, '\n\n');
+      
+      // Add emphasis to important phrases
+      formattedOutput = formattedOutput.replace(/(important|key|critical|essential|significant)/gi, '**$1**');
+      break;
+      
+    case 'llama3:latest':
+      // Ensure headings are properly formatted
+      formattedOutput = formattedOutput.replace(/^(#+)\s*([^\n]+)/gm, '$1 $2');
+      
+      // Ensure paragraphs are properly spaced
+      formattedOutput = formattedOutput.replace(/\n{3,}/g, '\n\n');
+      
+      // Add horizontal rules between major sections if not present
+      if (!formattedOutput.includes('---')) {
+        formattedOutput = formattedOutput.replace(/\n(#+\s[^\n]+)\n/g, '\n\n---\n\n$1\n\n');
+      }
+      break;
+      
+    default:
+      // No special formatting
+      break;
+  }
+  
+  return formattedOutput;
+};
+
 // Add endpoint to check model availability
 app.get('/api/models/check', async (req, res) => {
   try {
@@ -740,19 +809,22 @@ app.get('/api/chain/stream', async (req, res) => {
       sendEvent('modelStart', { model: 'gemma:2b', stage: 'ideas' });
       const gemmaPrompt = `List 5 angles for an article on: ${topic}`;
       const gemma = await queryModel('gemma:2b', gemmaPrompt);
-      sendEvent('modelComplete', { model: 'gemma:2b', output: gemma, stage: 'ideas' });
+      const formattedGemma = formatModelOutput(gemma, 'gemma:2b');
+      sendEvent('modelComplete', { model: 'gemma:2b', output: formattedGemma, stage: 'ideas' });
       
       // Step 2: Mistral - Outline Creation
       sendEvent('modelStart', { model: 'mistral:latest', stage: 'outline' });
-      const mistralPrompt = `Pick one of the following ideas and create a structured outline with key arguments and examples:\n${gemma}`;
+      const mistralPrompt = `Pick one of the following ideas and create a structured outline with key arguments and examples:\n${formattedGemma}`;
       const mistral = await queryModel('mistral:latest', mistralPrompt);
-      sendEvent('modelComplete', { model: 'mistral:latest', output: mistral, stage: 'outline' });
+      const formattedMistral = formatModelOutput(mistral, 'mistral:latest');
+      sendEvent('modelComplete', { model: 'mistral:latest', output: formattedMistral, stage: 'outline' });
       
       // Step 3: Zephyr - Draft Writing
       sendEvent('modelStart', { model: 'zephyr-7b:latest', stage: 'draft' });
-      const zephyrPrompt = `Transform this outline into a persuasive op-ed with emotional clarity and logical flow:\n${mistral}`;
+      const zephyrPrompt = `Transform this outline into a persuasive op-ed with emotional clarity and logical flow:\n${formattedMistral}`;
       const zephyr = await queryModel('zephyr-7b:latest', zephyrPrompt);
-      sendEvent('modelComplete', { model: 'zephyr-7b:latest', output: zephyr, stage: 'draft' });
+      const formattedZephyr = formatModelOutput(zephyr, 'zephyr-7b:latest');
+      sendEvent('modelComplete', { model: 'zephyr-7b:latest', output: formattedZephyr, stage: 'draft' });
       
       // Step 4: LLaMA 3 - Final Article
       sendEvent('modelStart', { model: 'llama3:latest', stage: 'final' });
@@ -763,31 +835,38 @@ Write an engaging op-ed based on the draft below. Improve clarity, structure, an
 - Have a clear thesis and three supporting arguments
 - End with a memorable conclusion
 - Use persuasive language throughout
+- Use proper markdown formatting with headings, emphasis, and well-structured paragraphs
 
 Rewrite the following:
 
-${zephyr}`;
+${formattedZephyr}`;
       const llama3 = await queryModel('llama3:latest', llama3Prompt);
       
       // Post-process to ensure we don't exceed 750 words
       const trimmedOutput = trimTo750Words(llama3);
+      const formattedLlama3 = formatModelOutput(trimmedOutput, 'llama3:latest');
       
       // Optional: Add a quality check step
       sendEvent('modelStart', { model: 'mistral:latest', stage: 'quality' });
-      const qualityCheck = await performQualityCheck(trimmedOutput, topic);
+      const qualityCheck = await performQualityCheck(formattedLlama3, topic);
       
       sendEvent('modelComplete', { 
         model: 'llama3:latest', 
-        output: trimmedOutput, 
+        output: formattedLlama3, 
         stage: 'final',
-        wordCount: trimmedOutput.split(/\s+/).length,
+        wordCount: formattedLlama3.split(/\s+/).length,
         qualityCheck: qualityCheck
       });
       
       // Send completion event
       sendEvent('complete', { 
-        finalOutput: trimmedOutput,
-        stages: { gemma, mistral, zephyr, llama3: trimmedOutput },
+        finalOutput: formattedLlama3,
+        stages: { 
+          gemma: formattedGemma, 
+          mistral: formattedMistral, 
+          zephyr: formattedZephyr, 
+          llama3: formattedLlama3 
+        },
         qualityCheck
       });
       
