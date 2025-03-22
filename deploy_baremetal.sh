@@ -108,7 +108,7 @@ fi
 
 # Create PM2 ecosystem file with CPU optimization
 echo "⚙️ Creating PM2 ecosystem file with CPU optimization..."
-cat > $REPO_DIR/ecosystem.config.js << EOF
+cat > $REPO_DIR/ecosystem.config.cjs << EOF
 module.exports = {
   apps: [{
     name: "averroesmind",
@@ -176,7 +176,7 @@ systemctl restart nginx
 # Start the application with PM2
 echo "🚀 Starting the application with PM2..."
 cd $REPO_DIR
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 # Save PM2 configuration
 echo "💾 Saving PM2 configuration..."
