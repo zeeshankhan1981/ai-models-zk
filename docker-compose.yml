@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  averroesmind:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: averroesmind
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - ollama
+    networks:
+      - averroesmind-network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - averroesmind-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: averroesmind-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - averroesmind
+    networks:
+      - averroesmind-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: averroesmind-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - nginx
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email your-email@example.com -d averroesmind.xyz -d www.averroesmind.xyz --agree-tos
+    networks:
+      - averroesmind-network
+
+volumes:
+  ollama-data:
+
+networks:
+  averroesmind-network:
+    driver: bridge

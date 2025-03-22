@@ -1,0 +1,18 @@
+[Unit]
+Description=AverroesMind - Multi-Model AI Chat Interface
+After=network.target ollama.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/averroesmind.xyz
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=averroesmind
+Environment=NODE_ENV=production PORT=3000
+
+[Install]
+WantedBy=multi-user.target
