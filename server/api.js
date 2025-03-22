@@ -135,36 +135,7 @@ const models = [
     characterLimit: 1500,
     requiresGPU: false,
     systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
-  },
-  {
-    id: 'codellama',
-    name: 'CodeLlama 7B',
-    description: 'CodeLlama is a specialized code generation model based on Llama 2, fine-tuned specifically for programming tasks. With 7 billion parameters, it excels at understanding and generating code across multiple programming languages including Python, JavaScript, Java, C++, and more. It can help with code completion, debugging, refactoring, and explaining complex programming concepts. Optimized for CPU usage, it provides efficient performance without requiring GPU acceleration.',
-    shortDescription: 'Specialized code generation model fine-tuned from Llama 2',
-    tags: ['Coding', 'Programming', 'CPU-Optimized'],
-    temperature: 0.5,
-    top_p: 0.95,
-    top_k: 40,
-    num_predict: 768,
-    characterLimit: 1500,
-    requiresGPU: false,
-    systemPrompt: "You are a specialized coding assistant focused on helping with programming tasks. Provide clear, efficient, and well-documented code examples. Focus exclusively on programming-related questions and tasks. If asked about non-programming topics, politely explain that you're specialized in coding and programming. Always include comments in your code to explain complex logic, and provide explanations of how the code works when appropriate."
-  },
-  {
-    id: 'llama3',
-    name: 'Llama 3 8B',
-    description: 'Llama 3 is Meta\'s latest open-source large language model, representing a significant advancement over Llama 2. With 8 billion parameters, it offers enhanced reasoning capabilities, improved instruction following, and better factual accuracy. It excels at a wide range of tasks including creative writing, summarization, question answering, and conversational AI. Optimized for CPU performance, it delivers impressive results without requiring specialized hardware.',
-    shortDescription: 'Meta\'s latest model with enhanced reasoning and instruction following',
-    tags: ['General', 'Reasoning', 'CPU-Optimized'],
-    temperature: 0.7,
-    top_p: 0.9,
-    top_k: 40,
-    num_predict: 512,
-    characterLimit: 1500,
-    requiresGPU: false,
-    systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
-  }
-];
+  }];
 
 // Function to clean model responses
 function cleanModelResponse(text) {
