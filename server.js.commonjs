@@ -1,0 +1,112 @@
+// CommonJS version of server.js
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const http = require('http');
+const fs = require('fs');
+
+// Import api.js using CommonJS
+const apiModule = require('./server/api.js');
+const models = apiModule.models || [];
+const getResponse = apiModule.getResponse;
+const streamResponse = apiModule.streamResponse;
+const checkModelAvailability = apiModule.checkModelAvailability;
+const getAvailableModels = apiModule.getAvailableModels;
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// API endpoint to get available models
+app.get('/api/models', (req, res) => {
+  console.log('Available models:');
+  models.forEach(model => {
+    console.log(`- ${model.name} (${model.id}): ${model.description}`);
+  });
+  res.json(models);
+});
+
+// API endpoint to get a response from a model
+app.post('/api/chat/:modelId', async (req, res) => {
+  const { modelId } = req.params;
+  const { message, history, stream } = req.body;
+
+  try {
+    // Check if streaming is requested
+    if (stream) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      // Stream the response
+      await streamResponse(modelId, message, history, res);
+      res.end();
+    } else {
+      // Get a regular response
+      const response = await getResponse(modelId, message, history);
+      res.json({ response });
+    }
+  } catch (error) {
+    console.error(`Error in /api/chat/${modelId}:`, error.message || error);
+    res.status(500).json({ error: error.message || 'An error occurred while processing your request' });
+  }
+});
+
+// API endpoint to check model availability
+app.get('/api/models/check', async (req, res) => {
+  try {
+    const modelStatus = await checkModelAvailability();
+    res.json(modelStatus);
+  } catch (error) {
+    console.error('Error checking model availability:', error.message || error);
+    res.status(500).json({ error: error.message || 'An error occurred while checking model availability' });
+  }
+});
+
+// API endpoint to get available models from Ollama
+app.get('/api/models/available', async (req, res) => {
+  try {
+    const availableModels = await getAvailableModels();
+    res.json(availableModels);
+  } catch (error) {
+    console.error('Error getting available models:', error.message || error);
+    res.status(500).json({ error: error.message || 'An error occurred while getting available models' });
+  }
+});
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Start the server
+server.listen(PORT, () => {
+  console.log(`AverroesMind server running on port ${PORT}`);
+  console.log(`Access the application at http://localhost:${PORT}`);
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('Shutting down server...');
+  server.close(() => {
+    console.log('Server shut down');
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('Shutting down server...');
+  server.close(() => {
+    console.log('Server shut down');
+  });
+});
+
+module.exports = app;
