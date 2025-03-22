@@ -28,7 +28,8 @@ const MODEL_PORTS = {
   'phi-2': 11434,
   'llama2': 11434,
   codellama: 11434,
-  'llama3': 11434
+  'llama3': 11434,
+  'gemma': 11434
 };
 
 // Function to get the port for a specific model
@@ -135,7 +136,36 @@ const models = [
     characterLimit: 1500,
     requiresGPU: false,
     systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
-  }];
+  },
+  {
+    id: 'llama3',
+    name: 'Llama 3 8B',
+    description: 'Llama 3 is Meta\'s latest open-source large language model, offering significant improvements in reasoning, coding, and instruction following compared to Llama 2. With 8 billion parameters, it provides enhanced performance while maintaining efficiency, making it suitable for a wide range of applications including content generation, creative writing, and conversational AI.',
+    shortDescription: 'Meta\'s latest model with improved reasoning and instruction following',
+    tags: ['General', 'Reasoning', 'Instruction-following'],
+    temperature: 0.7,
+    top_p: 0.9,
+    top_k: 40,
+    num_predict: 512,
+    characterLimit: 1500,
+    requiresGPU: true,
+    systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
+  },
+  {
+    id: 'gemma',
+    name: 'Gemma 2B',
+    description: 'Gemma 2B is a lightweight yet capable language model developed by Google. Despite its small size of only 2 billion parameters, it offers impressive performance for general tasks, coding, and creative writing. Optimized for efficiency, it can run smoothly on consumer hardware without GPU acceleration, making it ideal for applications where resources are limited but quality responses are still required.',
+    shortDescription: 'Google\'s efficient 2B model with balanced capabilities',
+    tags: ['General', 'Efficiency', 'CPU-Optimized'],
+    temperature: 0.7,
+    top_p: 0.9,
+    top_k: 40,
+    num_predict: 512,
+    characterLimit: 1500,
+    requiresGPU: false,
+    systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
+  }
+];
 
 // Function to clean model responses
 function cleanModelResponse(text) {
