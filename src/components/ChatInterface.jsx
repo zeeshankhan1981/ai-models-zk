@@ -542,6 +542,10 @@ const ChatInterface = ({ selectedModel, models }) => {
     }
   };
 
+  const handleStop = () => {
+    stopResponse();
+  };
+
   return (
     <div className="chat-container">
       <div className="chat-messages" ref={messagesEndRef}>
@@ -606,10 +610,10 @@ const ChatInterface = ({ selectedModel, models }) => {
               </motion.div>
             ))}
             
-            {/* Only show streaming response if there's content and we're not loading a full response */}
-            {streamingResponse && isLoading && useStreaming && (
+            {/* Show streaming response */}
+            {streamingResponse && (
               <motion.div 
-                className="message assistant-message streaming"
+                className="message assistant-message"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -617,9 +621,7 @@ const ChatInterface = ({ selectedModel, models }) => {
                 <div className="message-header">
                   <span className="message-role">
                     Assistant
-                    {currentModel.name && (
-                      <span className="model-badge">{currentModel.name}</span>
-                    )}
+                    <span className="model-badge">{currentModel.name || selectedModel}</span>
                   </span>
                 </div>
                 <div className="message-content">
@@ -649,123 +651,83 @@ const ChatInterface = ({ selectedModel, models }) => {
                 </div>
               </motion.div>
             )}
-            
-            {/* Loading indicator */}
-            <AnimatePresence>
-              {isLoading && !streamingResponse && (
-                <motion.div 
-                  className="typing-indicator"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            
-            <div className="chat-actions">
-              {messages.length > 1 && (
-                <>
-                  <motion.div
-                    className="action-button streaming-toggle-container"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    title="When enabled, responses appear word by word in real-time. When disabled, responses appear all at once after completion."
-                  >
-                    <label className="streaming-toggle">
-                      <input
-                        type="checkbox"
-                        checked={useStreaming}
-                        onChange={() => setUseStreaming(!useStreaming)}
-                      />
-                      <span className="toggle-label">Streaming</span>
-                    </label>
-                  </motion.div>
-                  
-                  <motion.button 
-                    className="action-button save-button"
-                    onClick={saveConversation}
-                    disabled={isSaving}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    title="Save this conversation as a text file"
-                  >
-                    {isSaving ? 'Saving...' : 'Save Conversation'}
-                  </motion.button>
-                  
-                  <motion.button 
-                    className="action-button clear-button"
-                    onClick={clearHistory}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    title="Clear the current conversation history"
-                  >
-                    Clear History
-                  </motion.button>
-                </>
-              )}
-            </div>
           </>
         )}
       </div>
+      
       <div className="chat-input-container">
-        <form className="chat-form" onSubmit={handleSubmit}>
+        <div className="chat-input-wrapper">
           <textarea
-            className="chat-input"
+            ref={textareaRef}
+            className="chat-textarea"
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={`Message ${currentModel.name || 'Assistant'}...`}
+            placeholder={`Message ${currentModel.name}...`}
             disabled={isLoading || !modelAvailability[selectedModel]}
-            rows={1}
-            ref={textareaRef}
           />
-          {input.trim() !== '' && (
-            <button
-              type="button"
-              className="clear-button"
-              onClick={() => setInput('')}
-              aria-label="Clear input"
-            >
-              ✕
-            </button>
-          )}
-          <div className="chat-options">
-            <span className={`character-count ${input.length > characterLimit ? 'limit-exceeded' : ''}`}>
-              {input.length}/{characterLimit}
-            </span>
-          </div>
           
-          {isLoading && streamingResponse ? (
-            <button
-              type="button"
-              className="stop-button"
-              onClick={stopResponse}
+          {isLoading ? (
+            <button 
+              className="send-button" 
+              onClick={handleStop}
+              title="Stop generating"
             >
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="6" y="6" width="12" height="12" fill="currentColor" />
-              </svg>
+              Stop
             </button>
           ) : (
-            <button
-              type="submit"
-              className="send-button"
-              disabled={isLoading || input.trim() === '' || input.length > characterLimit || !modelAvailability[selectedModel]}
+            <button 
+              className="send-button" 
+              onClick={handleSubmit}
+              disabled={input.trim() === '' || input.length > characterLimit || !modelAvailability[selectedModel]}
+              title="Send message"
             >
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              Send
             </button>
           )}
-        </form>
+        </div>
+        
+        <div className="chat-options">
+          <span className={`character-count ${input.length > characterLimit ? 'limit-exceeded' : ''}`}>
+            {input.length}/{characterLimit}
+          </span>
+          
+          <div className="action-buttons">
+            <button 
+              className="action-button toggle-button"
+              onClick={() => setUseStreaming(!useStreaming)}
+              title={useStreaming ? "Turn off streaming" : "Turn on streaming"}
+            >
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={useStreaming}
+                  onChange={() => setUseStreaming(!useStreaming)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+              Streaming
+            </button>
+            
+            <button 
+              className="action-button"
+              onClick={saveConversation}
+              disabled={messages.length === 0 || isSaving}
+              title="Save conversation"
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
+            
+            <button 
+              className="action-button clear-button"
+              onClick={clearHistory}
+              disabled={messages.length === 0}
+              title="Clear conversation"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
