@@ -8,6 +8,7 @@
   margin: 0 auto;
   width: 100%;
   position: relative;
+  contain: layout;
 }
 
 .chat-messages {
@@ -19,6 +20,30 @@
   scroll-behavior: smooth;
   width: 100%;
   padding-bottom: 120px; /* Space for input */
+  height: calc(100vh - 200px);
+  overscroll-behavior: contain; /* Prevent scroll chaining */
+  position: relative;
+  will-change: transform; /* Optimize for scrolling performance */
+  contain: content; /* Improve scrolling performance */
+  contain: layout;
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
 }
 
 .message {
@@ -32,6 +57,7 @@
   border-radius: 0;
   box-shadow: none;
   border: none;
+  contain: content; /* Improve rendering performance */
 }
 
 .user-message {
@@ -92,6 +118,26 @@
   background-color: #ff3333;
   color: white;
   border-radius: 4px;
+}
+
+.stopped-badge {
+  margin-left: 8px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  background-color: #f59e0b;
+  color: white;
+  border-radius: 4px;
+}
+
+.message-history-notice {
+  text-align: center;
+  padding: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  border-radius: 4px;
+  margin: 8px 0;
+  opacity: 0.8;
 }
 
 .message-content {
@@ -193,6 +239,7 @@
   z-index: 10;
   max-width: 1000px;
   margin: 0 auto;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .chat-input-wrapper {
@@ -374,9 +421,11 @@ input:checked + .toggle-slider:before {
   }
 }
 
+/* Responsive styles */
 @media (max-width: 768px) {
   .chat-messages {
     padding: 1rem;
+    height: calc(100vh - 180px);
   }
   
   .message {
@@ -389,5 +438,9 @@ input:checked + .toggle-slider:before {
   
   .chat-input-wrapper {
     padding: 0.5rem;
+  }
+  
+  .action-buttons {
+    flex-wrap: wrap;
   }
 }

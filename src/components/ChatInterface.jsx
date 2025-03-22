@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -14,8 +14,14 @@ const ChatInterface = ({ selectedModel, models }) => {
   const [abortController, setAbortController] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [modelAvailability, setModelAvailability] = useState({});
+  const [visibleMessages, setVisibleMessages] = useState([]);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
   const textareaRef = useRef(null);
+  const observerRef = useRef(null);
+  const scrollPositionRef = useRef(0);
   
   // Get the current model from the models array
   const currentModel = models.find(model => model.id === selectedModel) || {};
@@ -24,12 +30,60 @@ const ChatInterface = ({ selectedModel, models }) => {
   // Get theme from document
   const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
 
+  // Improved scroll handling with IntersectionObserver
   useEffect(() => {
+    // Create a new IntersectionObserver for the end element
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      observerRef.current = new IntersectionObserver(
+        ([entry]) => {
+          setIsAtBottom(entry.isIntersecting);
+        },
+        { threshold: 0.1 }
+      );
+      
+      observerRef.current.observe(messagesEndRef.current);
     }
-  }, [messages, streamingResponse]);
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
+  // Handle saving scroll position when scrolling
+  const handleScroll = useCallback(() => {
+    if (chatContainerRef.current) {
+      scrollPositionRef.current = chatContainerRef.current.scrollTop;
+    }
+  }, []);
+
+  // Add scroll event listener
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    if (chatContainer) {
+      chatContainer.addEventListener('scroll', handleScroll);
+      return () => {
+        chatContainer.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [handleScroll]);
+
+  // Scroll to bottom function
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, []);
+
+  // Auto-scroll to bottom when new messages are added or when streaming
+  useEffect(() => {
+    if (isAtBottom || isLoading) {
+      scrollToBottom();
+    }
+  }, [messages, streamingResponse, isAtBottom, isLoading, scrollToBottom]);
+
+  // Handle textarea auto-resize
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -42,7 +96,7 @@ const ChatInterface = ({ selectedModel, models }) => {
     checkModelAvailability();
   }, []);
 
-  // Check model availability when selected model changes
+  // Handle model switching
   useEffect(() => {
     if (selectedModel) {
       // Clear streaming response when model changes
@@ -65,19 +119,8 @@ const ChatInterface = ({ selectedModel, models }) => {
     }
   }, [selectedModel]);
 
-  // Reset streaming state when model changes
+  // Load chat history when model changes
   useEffect(() => {
-    // If we're in the middle of a streaming response, abort it
-    if (abortController) {
-      abortController.abort();
-      setAbortController(null);
-    }
-    
-    // Reset streaming response
-    setStreamingResponse('');
-    setIsLoading(false);
-    
-    // Load chat history for this model from localStorage
     loadChatHistory();
   }, [selectedModel]);
 
@@ -86,7 +129,7 @@ const ChatInterface = ({ selectedModel, models }) => {
     setMessages([
       {
         role: 'assistant',
-        content: `You are now chatting with ${currentModel.name}. ${currentModel.shortDescription || ''}`,
+        content: `You are now chatting with ${currentModel.name || selectedModel}. ${currentModel.shortDescription || ''}`,
         timestamp: new Date().toISOString(),
         model: currentModel.name || selectedModel,
         isSystemMessage: true
@@ -126,7 +169,13 @@ const ChatInterface = ({ selectedModel, models }) => {
     try {
       const savedMessages = localStorage.getItem(`chatHistory-${selectedModel}`);
       if (savedMessages) {
-        setMessages(JSON.parse(savedMessages));
+        const parsedMessages = JSON.parse(savedMessages);
+        setMessages(parsedMessages);
+        
+        // Set a small timeout to ensure the DOM has updated before scrolling
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
       } else {
         setMessages([]);
       }
@@ -203,7 +252,7 @@ const ChatInterface = ({ selectedModel, models }) => {
         },
         {
           role: 'assistant',
-          content: `Error: The model "${currentModel.name}" is not available in Ollama. Please make sure it's installed or select a different model.`,
+          content: `Error: The model "${currentModel.name || selectedModel}" is not available in Ollama. Please make sure it's installed or select a different model.`,
           timestamp: new Date().toISOString(),
           model: currentModel.name || selectedModel,
           error: true
@@ -236,18 +285,7 @@ const ChatInterface = ({ selectedModel, models }) => {
         setIsLoading(true);
         
         // Get complete response
-        const response = await getResponse(userPrompt);
-        
-        // Add assistant message to chat
-        setMessages(prev => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: response,
-            timestamp: new Date().toISOString(),
-            model: currentModel.name || selectedModel
-          }
-        ]);
+        await getResponse(userPrompt);
       }
     } catch (error) {
       console.error('Error in handleSubmit:', error.message || error);
@@ -256,9 +294,6 @@ const ChatInterface = ({ selectedModel, models }) => {
     } finally {
       setIsLoading(false);
       setAbortController(null);
-      
-      // Save chat history
-      saveChatHistory();
     }
   };
 
@@ -316,9 +351,6 @@ const ChatInterface = ({ selectedModel, models }) => {
           model: currentModel.name || selectedModel
         }
       ]);
-      
-      // Save chat history
-      saveChatHistory();
       
       return cleanedResponse;
     } catch (error) {
@@ -439,9 +471,6 @@ const ChatInterface = ({ selectedModel, models }) => {
         
         // Reset streaming response
         setStreamingResponse('');
-        
-        // Save chat history
-        saveChatHistory();
       }
     } catch (error) {
       // Check if this is an abort error (user cancelled or navigated away)
@@ -546,17 +575,36 @@ const ChatInterface = ({ selectedModel, models }) => {
     stopResponse();
   };
 
+  // Virtualization for better performance with large chat histories
+  useEffect(() => {
+    if (messages.length > 100) {
+      // Only show the last 50 messages for very large histories
+      setVisibleMessages(messages.slice(-50));
+    } else {
+      setVisibleMessages(messages);
+    }
+  }, [messages]);
+
   return (
     <div className="chat-container">
-      <div className="chat-messages" ref={messagesEndRef}>
-        {messages.length === 0 ? (
+      <div 
+        className="chat-messages" 
+        ref={chatContainerRef}
+      >
+        {visibleMessages.length === 0 ? (
           <div className="empty-chat">
             <h3>Start a conversation</h3>
-            <p>Send a message to begin chatting with {currentModel.name}</p>
+            <p>Send a message to begin chatting with {currentModel.name || selectedModel}</p>
           </div>
         ) : (
           <>
-            {messages.map((message, index) => (
+            {messages.length > 100 && (
+              <div className="message-history-notice">
+                Showing most recent messages. {messages.length - 50} older messages are hidden.
+              </div>
+            )}
+            
+            {visibleMessages.map((message, index) => (
               <motion.div 
                 key={index}
                 className={`message ${message.role === 'user' ? 'user-message' : 'assistant-message'} ${message.error ? 'error-message' : ''} ${message.isSystemMessage ? 'system-message' : ''}`}
@@ -575,6 +623,9 @@ const ChatInterface = ({ selectedModel, models }) => {
                     )}
                     {message.role === 'assistant' && message.isSystemMessage && (
                       <span className="system-badge">System</span>
+                    )}
+                    {message.role === 'assistant' && message.stopped && (
+                      <span className="stopped-badge">Stopped</span>
                     )}
                   </span>
                 </div>
@@ -651,6 +702,7 @@ const ChatInterface = ({ selectedModel, models }) => {
                 </div>
               </motion.div>
             )}
+            <div ref={messagesEndRef} style={{ height: '10px', width: '100%' }} />
           </>
         )}
       </div>
@@ -663,7 +715,7 @@ const ChatInterface = ({ selectedModel, models }) => {
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={`Message ${currentModel.name}...`}
+            placeholder={`Message ${currentModel.name || selectedModel}...`}
             disabled={isLoading || !modelAvailability[selectedModel]}
           />
           
