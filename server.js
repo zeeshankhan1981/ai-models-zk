@@ -3,7 +3,10 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer } from 'http';
-import { models, getResponse, streamResponse, checkModelAvailability, getAvailableModels } from './server/api.js';
+
+// Import api.js using CommonJS compatibility approach
+import pkg from './server/api.js';
+const { models, getResponse, streamResponse, checkModelAvailability, getAvailableModels } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
