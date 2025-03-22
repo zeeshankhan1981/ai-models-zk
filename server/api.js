@@ -298,9 +298,9 @@ app.post('/api/chat', async (req, res) => {
           temperature: model.temperature || 0.7,
           top_p: model.top_p || 0.9,
           top_k: model.top_k || 40,
-          num_predict: model.num_predict || 512
-        },
-        ...CPU_OPTIMIZATION // Apply CPU optimization settings
+          num_predict: model.num_predict || 512,
+          ...CPU_OPTIMIZATION // Apply CPU optimization settings
+        }
       }, {
         timeout: 60000 // 60 second timeout
       });
@@ -343,18 +343,22 @@ app.post('/api/chat', async (req, res) => {
 // Streaming chat endpoint
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { modelId, prompt, systemPrompt } = req.body;
+    const { message, model, modelId, prompt, messages, systemPrompt } = req.body;
     
-    if (!modelId || !prompt) {
+    // Support both old and new parameter formats
+    const actualModelId = modelId || model;
+    const actualPrompt = prompt || message;
+    
+    if (!actualModelId || (!actualPrompt && !messages)) {
       return res.status(400).json({ error: 'Model ID and prompt are required' });
     }
     
-    const model = models.find(m => m.id === modelId);
-    if (!model) {
-      return res.status(404).json({ error: `Model ${modelId} not found` });
+    const modelObj = models.find(m => m.id === actualModelId);
+    if (!modelObj) {
+      return res.status(404).json({ error: `Model ${actualModelId} not found` });
     }
     
-    console.log(`Processing streaming chat request for model: ${modelId}`);
+    console.log(`Processing streaming chat request for model: ${actualModelId}`);
     
     // Set up streaming response
     res.setHeader('Content-Type', 'text/plain');
@@ -362,73 +366,101 @@ app.post('/api/chat/stream', async (req, res) => {
     
     try {
       // Make request to Ollama with streaming
-      const response = await axios.post(`${OLLAMA_API}/chat`, {
-        model: modelId,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt || model.systemPrompt || 'You are a helpful assistant.'
-          },
-          {
-            role: 'user',
-            content: prompt
+      const requestBody = messages && messages.length > 0 
+        ? {
+            model: actualModelId,
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt || modelObj.systemPrompt || 'You are a helpful assistant.'
+              },
+              ...messages
+            ],
+            options: {
+              temperature: modelObj.temperature || 0.7,
+              top_p: modelObj.top_p || 0.9,
+              top_k: modelObj.top_k || 40,
+              num_predict: modelObj.num_predict || 512,
+              ...CPU_OPTIMIZATION
+            }
           }
-        ],
-        options: {
-          temperature: model.temperature || 0.7,
-          top_p: model.top_p || 0.9,
-          top_k: model.top_k || 40,
-          num_predict: model.num_predict || 512
-        },
-        ...CPU_OPTIMIZATION, // Apply CPU optimization settings
-        stream: true
-      }, {
-        responseType: 'stream',
-        timeout: 60000 // 60 second timeout
+        : {
+            model: actualModelId,
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt || modelObj.systemPrompt || 'You are a helpful assistant.'
+              },
+              {
+                role: 'user',
+                content: actualPrompt
+              }
+            ],
+            options: {
+              temperature: modelObj.temperature || 0.7,
+              top_p: modelObj.top_p || 0.9,
+              top_k: modelObj.top_k || 40,
+              num_predict: modelObj.num_predict || 512,
+              ...CPU_OPTIMIZATION
+            }
+          };
+      
+      const response = await axios.post(`${OLLAMA_API}/chat`, requestBody, {
+        responseType: 'stream'
       });
       
       let hasStartedResponse = false;
+      let fullResponse = '';
       
+      // Stream the response to the client
       response.data.on('data', (chunk) => {
         try {
-          const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
+          const text = chunk.toString();
           
-          for (const line of lines) {
+          // Check if this is a JSON response
+          if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
             try {
-              const data = JSON.parse(line);
+              const jsonResponse = JSON.parse(text);
               
-              if (data.message && data.message.content) {
+              // If we have a message, send it
+              if (jsonResponse.message && jsonResponse.message.content) {
+                const content = jsonResponse.message.content;
+                fullResponse += content;
+                res.write(fullResponse);
                 hasStartedResponse = true;
-                res.write(data.message.content);
               }
-            } catch (parseError) {
-              console.error('Error parsing streaming chunk:', parseError.message);
-              // If we can't parse the line, just send it as is
-              if (line.trim()) {
-                hasStartedResponse = true;
-                res.write(line);
-              }
+            } catch (e) {
+              // Not valid JSON, treat as text
+              fullResponse += text;
+              res.write(fullResponse);
+              hasStartedResponse = true;
             }
+          } else {
+            // Treat as plain text
+            fullResponse += text;
+            res.write(fullResponse);
+            hasStartedResponse = true;
           }
-        } catch (chunkError) {
-          console.error('Error processing chunk:', chunkError.message);
+        } catch (error) {
+          console.error('Error processing chunk:', error);
         }
       });
       
       response.data.on('end', () => {
         if (!hasStartedResponse) {
-          // If no response was sent, send a fallback
-          res.write("I'm sorry, I couldn't generate a response. Please try again or try a different question.");
+          // If no response was sent, send an empty response
+          res.write('');
         }
         res.end();
       });
       
-      response.data.on('error', (err) => {
-        console.error('Stream error:', err.message);
+      response.data.on('error', (error) => {
+        console.error('Stream error:', error);
         if (!hasStartedResponse) {
-          res.write("I'm sorry, there was an error processing your request. Please try again.");
+          res.status(500).json({ error: 'Error streaming response' });
+        } else {
+          res.end();
         }
-        res.end();
       });
     } catch (apiError) {
       console.error('Ollama API streaming error:', apiError.message);
@@ -529,6 +561,158 @@ app.get('/api/diagnostics', async (req, res) => {
     });
   }
 });
+
+// Export the streamResponse function for use in server.js
+async function streamResponse(prompt, modelId, res, messages, customSystemPrompt) {
+  try {
+    const model = models.find(m => m.id === modelId);
+    if (!model) {
+      throw new Error(`Model ${modelId} not found`);
+    }
+    
+    console.log(`Processing streaming request for model: ${modelId}`);
+    
+    // Determine the appropriate Ollama API endpoint
+    const ollamaEndpoint = `${OLLAMA_API}/chat`;
+    
+    // Prepare the request body based on whether we have messages or just a prompt
+    const requestBody = messages && messages.length > 0 
+      ? {
+          model: modelId,
+          messages: [
+            {
+              role: 'system',
+              content: customSystemPrompt || model.systemPrompt || 'You are a helpful assistant.'
+            },
+            ...messages
+          ],
+          options: {
+            temperature: model.temperature || 0.7,
+            top_p: model.top_p || 0.9,
+            top_k: model.top_k || 40,
+            num_predict: model.num_predict || 512,
+            ...CPU_OPTIMIZATION
+          }
+        }
+      : {
+          model: modelId,
+          messages: [
+            {
+              role: 'system',
+              content: customSystemPrompt || model.systemPrompt || 'You are a helpful assistant.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          options: {
+            temperature: model.temperature || 0.7,
+            top_p: model.top_p || 0.9,
+            top_k: model.top_k || 40,
+            num_predict: model.num_predict || 512,
+            ...CPU_OPTIMIZATION
+          }
+        };
+    
+    // Make the API request
+    const response = await axios.post(ollamaEndpoint, requestBody, {
+      responseType: 'stream'
+    });
+    
+    let hasStartedResponse = false;
+    let fullResponse = '';
+    
+    // Stream the response to the client
+    response.data.on('data', (chunk) => {
+      try {
+        const text = chunk.toString();
+        
+        // Check if this is a JSON response
+        if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
+          try {
+            const jsonResponse = JSON.parse(text);
+            
+            // If we have a message, send it
+            if (jsonResponse.message && jsonResponse.message.content) {
+              const content = jsonResponse.message.content;
+              fullResponse += content;
+              res.write(fullResponse);
+              hasStartedResponse = true;
+            }
+          } catch (e) {
+            // Not valid JSON, treat as text
+            fullResponse += text;
+            res.write(fullResponse);
+            hasStartedResponse = true;
+          }
+        } else {
+          // Treat as plain text
+          fullResponse += text;
+          res.write(fullResponse);
+          hasStartedResponse = true;
+        }
+      } catch (error) {
+        console.error('Error processing chunk:', error);
+      }
+    });
+    
+    response.data.on('end', () => {
+      if (!hasStartedResponse) {
+        // If no response was sent, send an empty response
+        res.write('');
+      }
+    });
+    
+    response.data.on('error', (error) => {
+      console.error('Stream error:', error);
+      if (!hasStartedResponse) {
+        res.status(500).json({ error: 'Error streaming response' });
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error in streamResponse:', error);
+    throw error;
+  }
+}
+
+// Export the necessary functions and data using ES module exports
+export { models, cleanModelResponse, streamResponse };
+
+export async function checkModelAvailability(modelId) {
+  try {
+    const response = await axios.get(`${OLLAMA_API}/tags`);
+    const availableModels = response.data.models.map(model => model.name);
+    return availableModels.some(model => 
+      model === modelId || 
+      model.startsWith(`${modelId}:`) || 
+      (modelId.includes(':') && model === modelId.split(':')[0])
+    );
+  } catch (error) {
+    console.error(`Error checking availability for model ${modelId}:`, error);
+    return false;
+  }
+}
+
+export async function getAvailableModels() {
+  try {
+    const response = await axios.get(`${OLLAMA_API}/tags`);
+    const ollamaModels = response.data.models.map(model => model.name);
+    
+    return models.filter(model => 
+      ollamaModels.some(ollamaModel => 
+        ollamaModel === model.id || 
+        ollamaModel.startsWith(`${model.id}:`) || 
+        (model.id.includes(':') && ollamaModel === model.id.split(':')[0])
+      )
+    );
+  } catch (error) {
+    console.error('Error fetching available models:', error);
+    return [];
+  }
+}
 
 app.listen(PORT, () => {
   console.log(`API server running on port ${PORT}`);

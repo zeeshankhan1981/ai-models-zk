@@ -4,9 +4,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer } from 'http';
 
-// Import api.js using CommonJS compatibility approach
-import pkg from './server/api.js';
-const { models, getResponse, streamResponse, checkModelAvailability, getAvailableModels } = pkg;
+// Import api.js using dynamic import for ESM compatibility
+const apiModule = await import('./server/api.js');
+const { models, getResponse, checkModelAvailability, getAvailableModels, streamResponse } = apiModule;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,10 +66,14 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.post('/api/chat/stream', async (req, res) => {
-  const { message, model } = req.body;
+  const { message, model, modelId, prompt, messages, systemPrompt } = req.body;
   
-  if (!message || !model) {
-    return res.status(400).json({ error: 'Message and model are required' });
+  // Support both old and new parameter formats
+  const actualModelId = modelId || model;
+  const actualPrompt = prompt || message;
+  
+  if (!actualModelId || (!actualPrompt && !messages)) {
+    return res.status(400).json({ error: 'Message/prompt and model/modelId are required' });
   }
   
   res.setHeader('Content-Type', 'text/event-stream');
@@ -77,7 +81,8 @@ app.post('/api/chat/stream', async (req, res) => {
   res.setHeader('Connection', 'keep-alive');
   
   try {
-    await streamResponse(message, model, res);
+    // Pass all parameters to ensure compatibility
+    await streamResponse(actualPrompt, actualModelId, res, messages, systemPrompt);
     res.end();
   } catch (error) {
     console.error('Error streaming response:', error);

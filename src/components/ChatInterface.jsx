@@ -5,6 +5,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import axios from 'axios';
 import './ChatInterface.css';
+import PromptGuide from './PromptGuide';
 
 const ChatInterface = ({ selectedModel, models }) => {
   const [messages, setMessages] = useState([]);
@@ -45,6 +46,19 @@ const ChatInterface = ({ selectedModel, models }) => {
       saveChatHistory();
     }
   }, [messages, selectedModel]);
+
+  // Listen for example prompt application from PromptGuide
+  useEffect(() => {
+    const handleExamplePrompt = (event) => {
+      setInput(event.detail.prompt);
+    };
+    
+    document.addEventListener('applyExamplePrompt', handleExamplePrompt);
+    
+    return () => {
+      document.removeEventListener('applyExamplePrompt', handleExamplePrompt);
+    };
+  }, []);
 
   // Handle message virtualization for performance
   useEffect(() => {
@@ -215,11 +229,14 @@ const ChatInterface = ({ selectedModel, models }) => {
       
       // Make API request
       const response = await axios.post('http://localhost:3001/api/chat/stream', {
+        modelId: selectedModel,
+        model: selectedModel, // For backward compatibility
+        prompt: input,
+        message: input, // For backward compatibility
         messages: [...messages, userMessage].map(msg => ({
           role: msg.role,
           content: msg.content
         })),
-        model: selectedModel,
         systemPrompt: currentModel.systemPrompt
       }, {
         signal: controller.signal,
@@ -448,6 +465,8 @@ const ChatInterface = ({ selectedModel, models }) => {
           <span className={`character-count ${characterCount > characterLimit ? 'limit-exceeded' : ''}`}>
             {characterCount}/{characterLimit}
           </span>
+          
+          <PromptGuide selectedModel={selectedModel} />
           
           <div className="action-buttons">
             <button 
