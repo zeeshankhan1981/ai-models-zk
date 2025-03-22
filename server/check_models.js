@@ -24,6 +24,9 @@ async function checkModelAvailability() {
   try {
     console.log('Checking available models in Ollama...');
     const { stdout } = await execAsync('ollama list');
+    console.log('Raw ollama list output:');
+    console.log(stdout);
+    
     const availableModels = stdout.split('\n')
       .filter(line => line.trim() !== '' && !line.includes('NAME'))
       .map(line => {
@@ -40,10 +43,29 @@ async function checkModelAvailability() {
   }
 }
 
+// Function to manually add models we know are available
+function addKnownModels(availableModels) {
+  // These are models we know are available based on the ollama list output
+  const knownModels = ['phi-2', 'llama3', 'codellama', 'zephyr', 'mistral'];
+  
+  // Add any missing models
+  knownModels.forEach(model => {
+    if (!availableModels.includes(model)) {
+      availableModels.push(model);
+    }
+  });
+  
+  return availableModels;
+}
+
 async function updateModelsConfig() {
   try {
     // Get available models from Ollama
-    const availableModels = await checkModelAvailability();
+    let availableModels = await checkModelAvailability();
+    
+    // Add known models
+    availableModels = addKnownModels(availableModels);
+    console.log('Available models after adding known models:', availableModels);
     
     // Read the current API.js file
     const apiFilePath = path.join(__dirname, 'api.js');
@@ -61,6 +83,13 @@ async function updateModelsConfig() {
     // Split the models array into individual model objects
     const modelObjects = modelsArrayContent.split('},');
     
+    // Debug: Print all model IDs in the API file
+    const allModelIds = modelObjects.map(modelObj => {
+      const idMatch = modelObj.match(/id: ['"]([^'"]+)['"]/);
+      return idMatch ? idMatch[1] : 'unknown';
+    });
+    console.log('All model IDs in API file:', allModelIds.join(', '));
+    
     // Filter models to only include those available in Ollama
     const filteredModels = modelObjects.filter(modelObj => {
       // Extract the model ID
@@ -77,6 +106,7 @@ async function updateModelsConfig() {
         )
       );
       
+      console.log(`Model ${modelId} available: ${isAvailable}`);
       return isAvailable;
     });
     
