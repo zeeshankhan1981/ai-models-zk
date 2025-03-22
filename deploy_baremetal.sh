@@ -28,6 +28,16 @@ echo "📦 Installing required dependencies..."
 apt update
 apt install -y nginx certbot python3-certbot-nginx nodejs npm curl git htop
 
+# Check Node.js version and install newer version if needed
+NODE_VERSION=$(node -v 2>/dev/null | cut -d 'v' -f 2 || echo "0.0.0")
+if [ "$(printf '%s\n' "14.0.0" "$NODE_VERSION" | sort -V | head -n1)" = "14.0.0" ]; then
+  echo "✅ Node.js version $NODE_VERSION is sufficient"
+else
+  echo "📦 Installing newer version of Node.js..."
+  curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+  apt install -y nodejs
+fi
+
 # Install Ollama if not already installed
 if ! command -v ollama &> /dev/null; then
   echo "📦 Installing Ollama..."
@@ -39,6 +49,7 @@ if ! command -v ollama &> /dev/null; then
 [Unit]
 Description=Ollama Service
 After=network-online.target
+Wants=network-online.target
 
 [Service]
 Environment="OLLAMA_HOST=0.0.0.0"
@@ -83,11 +94,11 @@ cd $REPO_DIR
 
 # Install dependencies
 echo "📦 Installing Node.js dependencies..."
-npm install --production
+npm install
 
 # Build the application
 echo "🏗️ Building the application..."
-npm run build
+npx vite build
 
 # Install PM2 if not already installed
 if ! command -v pm2 &> /dev/null; then
@@ -141,6 +152,9 @@ server {
     }
 }
 EOF
+
+# Create Nginx sites-enabled directory if it doesn't exist
+mkdir -p /etc/nginx/sites-enabled
 
 # Enable the site
 echo "🔌 Enabling the site in Nginx..."
@@ -214,9 +228,16 @@ ollama create mistral-cpu -f modelfiles/Mistral
 ollama create phi-cpu -f modelfiles/Phi
 ollama create codellama-cpu -f modelfiles/Codellama
 
+# Ask for email for SSL certificates
+read -p "Enter your email for SSL certificate notifications: " EMAIL
+if [ -z "$EMAIL" ]; then
+  EMAIL="admin@$DOMAIN"
+  echo "Using default email: $EMAIL"
+fi
+
 # Set up SSL with Let's Encrypt
 echo "🔒 Setting up SSL with Let's Encrypt..."
-certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email your-email@example.com
+certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email $EMAIL
 
 echo "🎉 Deployment complete!"
 echo "🌐 Your application is now available at: https://$DOMAIN"
