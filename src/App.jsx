@@ -5,6 +5,7 @@ import ChatInterface from './components/ChatInterface';
 import ModelSelector from './components/ModelSelector';
 import ThemeToggle from './components/ThemeToggle';
 import ModelInfo from './components/ModelInfo';
+import ModelChainPanel from './components/ModelChainPanel';
 
 function App() {
   const [theme, setTheme] = useState(() => {
@@ -15,6 +16,12 @@ function App() {
   const [selectedModel, setSelectedModel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isChainMode, setIsChainMode] = useState(false);
+
+  // Toggle chain mode
+  const toggleChainMode = () => {
+    setIsChainMode(prevMode => !prevMode);
+  };
 
   // Apply theme to document
   useEffect(() => {
@@ -87,6 +94,9 @@ function App() {
             onModelChange={handleModelChange} 
           />
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+          <button onClick={toggleChainMode} className="chain-toggle">
+            {isChainMode ? 'Switch to Chat' : 'Switch to Chain Mode'}
+          </button>
         </div>
       </header>
 
@@ -103,6 +113,7 @@ function App() {
             <button onClick={() => window.location.reload()}>Retry</button>
           </div>
         ) : (
+          isChainMode ? <ModelChainPanel /> : 
           <>
             {currentModel && (
               <div className="model-info-container">

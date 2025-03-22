@@ -1,0 +1,64 @@
+/* Styles for ModelChainPanel to integrate seamlessly into the main chat area */
+
+.model-chain-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.input-section {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.input-section input {
+  flex: 1;
+  padding: 10px;
+  margin-right: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: var(--input-background);
+  color: var(--text-color);
+}
+
+.input-section button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--button-background);
+  color: var(--button-text);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.input-section button:disabled {
+  background-color: var(--button-disabled);
+  cursor: not-allowed;
+}
+
+.output-section {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.output-pane {
+  margin-bottom: 20px;
+}
+
+.output-pane h3 {
+  margin-bottom: 10px;
+}
+
+.output-pane p {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.error-message {
+  color: var(--error-color);
+  margin-bottom: 20px;
+}

@@ -2,6 +2,19 @@
 
 All notable changes to the AverroesMind Multi-Model LLM Playground will be documented in this file.
 
+## [v2.8] - 2025-03-22
+
+### Added
+- Model chaining feature for generating longform content
+- New endpoint `/api/chain/gemma-mistral-zephyr-llama3` for deterministic model chaining
+- ModelChainPanel component for the frontend interface
+- Toggle functionality to switch between chat and chain modes
+
+### Changed
+- Updated UI to support both chat and chain interfaces
+- Improved error handling for model chain requests
+- Enhanced styling for consistent user experience
+
 ## [v2.7] - 2025-03-22
 
 ### Added

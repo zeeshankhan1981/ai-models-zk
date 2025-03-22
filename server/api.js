@@ -552,6 +552,68 @@ app.get('/api/diagnostics', async (req, res) => {
   }
 });
 
+// Endpoint for model chaining
+app.post('/api/chain/gemma-mistral-zephyr-llama3', async (req, res) => {
+  try {
+    const { topic } = req.body;
+    if (typeof topic !== 'string' || topic.length > 200) {
+      return res.status(400).json({ error: 'Invalid input: topic must be a string with a maximum length of 200 characters.' });
+    }
+
+    const result = await runModelChain(topic);
+    res.json(result);
+  } catch (error) {
+    console.error('Error in model chain request:', error);
+    res.status(500).json({ error: 'An unexpected error occurred during model chaining.' });
+  }
+});
+
+// Function to run the model chain
+async function runModelChain(topic) {
+  const gemmaPrompt = `List 5 angles for an article on: ${topic}`;
+  const gemma = await queryModel('gemma:2b', gemmaPrompt);
+
+  const mistralPrompt = `Pick one of the following ideas and create a structured outline with key arguments and examples:\n${gemma}`;
+  const mistral = await queryModel('mistral:latest', mistralPrompt);
+
+  const zephyrPrompt = `Transform this outline into a persuasive op-ed with emotional clarity:\n${mistral}`;
+  const zephyr = await queryModel('zephyr-7b:latest', zephyrPrompt);
+
+  const llama3Prompt = `Expand this draft into a professional 1000-word opinion piece:\n${zephyr}`;
+  const llama3 = await queryModel('llama3:latest', llama3Prompt);
+
+  return {
+    finalOutput: llama3,
+    stages: { gemma, mistral, zephyr, llama3 }
+  };
+}
+
+// Function to query a model with a prompt
+async function queryModel(modelId, prompt) {
+  const response = await axios.post(`${OLLAMA_API}/chat`, {
+    model: modelId,
+    messages: [{ role: 'system', content: SYSTEM_PROMPTS[modelId] }, { role: 'user', content: prompt }],
+    options: {
+      temperature: 0.7,
+      top_p: 0.9,
+      top_k: 40,
+      num_predict: 512
+    },
+    ...CPU_OPTIMIZATION,
+    stream: false
+  });
+
+  return response.data.message.content.trim();
+}
+
+// Hardcoded system prompts for each model
+const SYSTEM_PROMPTS = {
+  'gemma:2b': 'You generate brief, topical article ideas.',
+  'mistral:latest': 'You are a structured researcher creating outlines and evidence.',
+  'zephyr-7b:latest': 'You rewrite text for tone, persuasion, and human readability.',
+  'llama3:latest': 'You are a seasoned editorial writer producing fully polished articles.'
+};
+
 app.listen(PORT, () => {
   console.log(`API server running on port ${PORT}`);
   console.log('Available models:');
