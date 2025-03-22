@@ -1,8 +1,8 @@
-# LocalMind - Multi-Model AI Chat Interface
+# AverroesMind - Multi-Model AI Chat Interface
 
-LocalMind is a modern, elegant, and feature-rich interface for interacting with multiple Ollama models on your local machine. It provides a seamless way to chat with different AI models, compare their responses, and leverage their unique capabilities - all while keeping your data private and secure on your own hardware.
+AverroesMind is a modern, elegant, and feature-rich interface for interacting with multiple Ollama models on your local machine. It provides a seamless way to chat with different AI models, compare their responses, and leverage their unique capabilities - all while keeping your data private and secure on your own hardware.
 
-![LocalMind Screenshot](screenshot.png)
+![AverroesMind Screenshot](screenshot.png)
 
 ## Features
 
@@ -38,7 +38,7 @@ LocalMind is a modern, elegant, and feature-rich interface for interacting with 
 
 ## Architecture
 
-LocalMind consists of two main components:
+AverroesMind consists of two main components:
 
 1. **Frontend**: A React application built with Vite that provides the user interface
 2. **Backend**: An Express.js API server that communicates with Ollama
