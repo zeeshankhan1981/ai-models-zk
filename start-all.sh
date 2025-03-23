@@ -13,21 +13,6 @@ print_success() {
     echo -e "\033[32m[SUCCESS] $1\033[0m"
 }
 
-# Function to stop running processes
-stop_processes() {
-    print_info "Stopping existing processes..."
-    
-    # Stop Node.js processes
-    pkill -f "node server.js" 2>/dev/null || true
-    pkill -f "node api.js" 2>/dev/null || true
-    
-    # Stop Vite development server
-    pkill -f "vite" 2>/dev/null || true
-    
-    # Wait for processes to terminate
-    sleep 2
-}
-
 # Check if required commands exist
 check_commands() {
     for cmd in ollama node npm; do
