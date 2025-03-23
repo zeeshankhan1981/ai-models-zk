@@ -5,9 +5,8 @@ import { fileURLToPath } from 'url';
 import { createServer } from 'http';
 import axios from 'axios';
 
-// Import api.js using CommonJS compatibility approach
-import pkg from './server/api.js';
-const { models, getResponse, streamResponse, checkModelAvailability, getAvailableModels, runModelChain } = pkg;
+// Import api.js using ES modules
+import { models, getResponse, streamResponse, checkModelAvailability, getAvailableModels, runModelChain } from './server/api.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

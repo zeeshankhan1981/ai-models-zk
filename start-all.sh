@@ -13,6 +13,21 @@ print_success() {
     echo -e "\033[32m[SUCCESS] $1\033[0m"
 }
 
+# Function to stop running processes
+stop_processes() {
+    print_info "Stopping existing processes..."
+    
+    # Stop Node.js processes
+    pkill -f "node server.js" 2>/dev/null || true
+    pkill -f "node api.js" 2>/dev/null || true
+    
+    # Stop Vite development server
+    pkill -f "vite" 2>/dev/null || true
+    
+    # Wait for processes to terminate
+    sleep 2
+}
+
 # Check if required commands exist
 check_commands() {
     for cmd in ollama node npm; do
@@ -45,9 +60,6 @@ start_ollama() {
 start_backend() {
     print_info "Starting backend server..."
     
-    # Kill any existing backend processes
-    pkill -f "node server.js" 2>/dev/null || true
-    
     # Start backend in background
     node server.js &
     BACKEND_PID=$!
@@ -68,9 +80,6 @@ start_backend() {
 # Start frontend
 start_frontend() {
     print_info "Starting frontend..."
-    
-    # Kill any existing frontend processes
-    pkill -f "vite" 2>/dev/null || true
     
     # Start frontend
     npm run dev &
@@ -98,6 +107,7 @@ cleanup() {
 main() {
     trap cleanup EXIT
     
+    stop_processes
     check_commands
     start_ollama
     start_backend

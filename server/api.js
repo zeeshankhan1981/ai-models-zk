@@ -1,6 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
+import express from 'express';
+import cors from 'cors';
+import axios from 'axios';
+
 const app = express();
 const PORT = 3001;
 
@@ -41,7 +42,7 @@ const getModelPort = (modelId) => {
 };
 
 // Define available models
-const models = [
+export const models = [
   {
     id: 'mistral:latest',
     name: 'Mistral 7B',
@@ -82,49 +83,49 @@ const models = [
     num_predict: 768, // Reduced from 1024 for better CPU performance
     characterLimit: 50000,
     requiresGPU: false, // Changed to false for CPU compatibility
-    systemPrompt: "You are an expert programming assistant specialized in code generation and software development. Focus exclusively on providing detailed, efficient, and well-structured code solutions. When asked about code or programming concepts, provide thorough explanations with examples. If asked about non-programming topics, politely explain that you're specialized in software development and can best help with programming-related questions. Always include proper error handling and follow best practices for the language you're working with."
+    systemPrompt: "You are an expert programming assistant specialized in code generation and software development. Focus exclusively on providing detailed, efficient, and well-structured code solutions. When asked about code or programming concepts, provide thorough explanations with examples. If asked about non-programming topics, politely explain that you're specialized in software development and can best help with programming-related questions. Always include proper comments and documentation in your code."
   },
   {
     id: 'zephyr-7b:latest',
     name: 'Zephyr 7B',
     description: 'Zephyr 7B is a refined language model specifically tuned for conversational AI and instruction following. Built upon the Mistral 7B architecture, it has been further enhanced through RLHF (Reinforcement Learning from Human Feedback) to produce more helpful, harmless, and honest responses. Zephyr excels at natural dialogue, creative writing, and providing thoughtful answers to complex questions while maintaining a conversational tone.',
     shortDescription: 'Conversational model with enhanced instruction following capabilities',
-    tags: ['General', 'Instruction-following'],
-    temperature: 0.8,  // Higher temperature for more creative responses
-    top_p: 0.9,
-    top_k: 40,
-    num_predict: 512,
-    characterLimit: 24000,
-    requiresGPU: false,
-    systemPrompt: "You are a helpful, conversational assistant designed to provide thoughtful and engaging responses. Always be respectful, ethical, and appropriate in your answers. If you don't know something, admit it rather than making up information. If a question is unclear, ask for clarification. Avoid providing harmful, illegal, unethical or deceptive information. Focus on being helpful while maintaining safety and ethical standards."
-  },
-  {
-    id: 'phi-2:latest',
-    name: 'Phi-2',
-    description: 'Phi-2 is a compact yet powerful 2.7 billion parameter language model developed by Microsoft Research. Despite its small size, it demonstrates remarkable reasoning capabilities and knowledge retention. Trained on a carefully curated dataset of high-quality web data and synthetic examples, Phi-2 excels at common sense reasoning, basic math, and simple coding tasks while being efficient enough to run on consumer hardware without GPU acceleration.',
-    shortDescription: 'Compact but powerful model with strong reasoning capabilities',
-    tags: ['General', 'Reasoning', 'Efficiency'],
+    tags: ['Conversational', 'Instruction-following', 'CPU-Optimized'],
     temperature: 0.7,
     top_p: 0.9,
     top_k: 40,
     num_predict: 512,
-    characterLimit: 6000,
+    characterLimit: 24000,
     requiresGPU: false,
-    systemPrompt: "You are a helpful, concise assistant with strong reasoning capabilities. Provide clear and accurate responses to questions, focusing on being factual and logical. If you're unsure about something, acknowledge your uncertainty rather than making up information. Keep your responses concise and to the point. Always be respectful, appropriate, and ethical in your responses."
+    systemPrompt: "You are a helpful, conversational AI assistant. Focus on providing clear, concise, and helpful responses. Maintain a friendly yet professional tone. When unsure, ask for clarification rather than making assumptions."
+  },
+  {
+    id: 'phi-2:latest',
+    name: 'Phi-2',
+    description: 'Phi-2 is a powerful language model optimized for code generation and natural language understanding. It excels at generating high-quality code across multiple programming languages while maintaining excellent performance on general text tasks.',
+    shortDescription: 'Specialized for code generation with good general performance',
+    tags: ['Coding', 'General', 'CPU-Optimized'],
+    temperature: 0.5,
+    top_p: 0.9,
+    top_k: 40,
+    num_predict: 512,
+    characterLimit: 24000,
+    requiresGPU: false,
+    systemPrompt: "You are a versatile AI assistant capable of both code generation and general conversation. When generating code, provide clear, well-documented solutions. For general tasks, maintain a helpful and informative tone."
   },
   {
     id: 'metamath:latest',
     name: 'MetaMath',
-    description: 'MetaMath is a specialized model fine-tuned for mathematical reasoning and problem-solving. Trained on a diverse collection of mathematical content including textbooks, research papers, and step-by-step solutions, it excels at breaking down complex problems into logical steps. MetaMath can handle various domains including algebra, calculus, statistics, and discrete mathematics, making it ideal for educational purposes and tackling challenging mathematical questions. It uses GPU acceleration for optimal performance.',
-    shortDescription: 'Math specialist with step-by-step problem solving capabilities',
-    tags: ['Math', 'Problem-solving'],
-    temperature: 0.3,  // Low temperature for precise math solutions
-    top_p: 0.95,
-    top_k: 50,
-    num_predict: 768,
+    description: 'MetaMath is a specialized model designed for mathematical reasoning and formal proofs. It excels at solving complex mathematical problems, verifying proofs, and explaining mathematical concepts in detail.',
+    shortDescription: 'Specialized for mathematical reasoning and formal proofs',
+    tags: ['Mathematics', 'Reasoning', 'CPU-Optimized'],
+    temperature: 0.3,  // Lower temperature for more precise mathematical reasoning
+    top_p: 0.9,
+    top_k: 40,
+    num_predict: 512,
     characterLimit: 24000,
-    requiresGPU: true,
-    systemPrompt: "You are a mathematics expert assistant focused EXCLUSIVELY on mathematical topics. You MUST ONLY respond to questions related to mathematics, such as algebra, calculus, statistics, geometry, number theory, and mathematical logic. If a user asks about ANY non-mathematical topic, politely explain that you are a specialized mathematics assistant and can only help with math-related questions. NEVER provide responses about medical issues, personal relationships, politics, or any other non-mathematical topics. Your purpose is to provide clear, step-by-step solutions to mathematical problems and explain mathematical concepts."
+    requiresGPU: false,
+    systemPrompt: "You are a specialized mathematical assistant focused on solving complex mathematical problems and verifying proofs. Provide clear, step-by-step solutions with detailed explanations."
   },
   {
     id: 'llama2:latest',
@@ -136,37 +137,37 @@ const models = [
     top_p: 0.9,
     top_k: 40,
     num_predict: 512,
-    characterLimit: 12000,
+    characterLimit: 24000,
     requiresGPU: false,
-    systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
+    systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information. Do not provide harmful, unethical, or illegal content."
   },
   {
     id: 'llama3:latest',
     name: 'Llama 3 8B',
-    description: 'Llama 3 is Meta\'s latest open-source large language model, offering significant improvements in reasoning, coding, and instruction following compared to Llama 2. With 8 billion parameters, it provides enhanced performance while maintaining efficiency, making it suitable for a wide range of applications including content generation, creative writing, and conversational AI.',
-    shortDescription: 'Meta\'s latest model with improved reasoning and instruction following',
-    tags: ['General', 'Reasoning', 'Instruction-following'],
+    description: 'Llama 3 is an advanced large language model with 8 billion parameters, offering enhanced capabilities in content generation, summarization, and complex reasoning tasks. It builds upon the success of Llama 2 with improved performance and safety features.',
+    shortDescription: 'Advanced 8B model for complex tasks',
+    tags: ['General', 'Instruction-following', 'CPU-Optimized'],
     temperature: 0.7,
     top_p: 0.9,
     top_k: 40,
     num_predict: 512,
     characterLimit: 24000,
-    requiresGPU: true,
-    systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
+    requiresGPU: false,
+    systemPrompt: "You are a highly capable AI assistant that excels at complex reasoning tasks. Provide clear, detailed explanations for your answers. Always maintain a professional and helpful tone."
   },
   {
     id: 'gemma:2b',
     name: 'Gemma 2B',
-    description: 'Gemma 2B is a lightweight yet capable language model developed by Google. Despite its small size of only 2 billion parameters, it offers impressive performance for general tasks, coding, and creative writing. Optimized for efficiency, it can run smoothly on consumer hardware without GPU acceleration, making it ideal for applications where resources are limited but quality responses are still required.',
-    shortDescription: 'Google\'s efficient 2B model with balanced capabilities',
-    tags: ['General', 'Efficiency', 'CPU-Optimized'],
-    temperature: 0.7,
+    description: 'Gemma 2B is a specialized model designed for generating creative article ideas and outlines. It excels at brainstorming topics and structuring content in a way that is both engaging and informative.',
+    shortDescription: 'Specialized for creative article generation',
+    tags: ['Creativity', 'Article Generation', 'CPU-Optimized'],
+    temperature: 0.8,  // Higher temperature for more creative outputs
     top_p: 0.9,
     top_k: 40,
     num_predict: 512,
-    characterLimit: 8000,
+    characterLimit: 24000,
     requiresGPU: false,
-    systemPrompt: "You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible while being safe. Your answers should be informative, ethical, and appropriate for all audiences. If a question is unclear or lacks specific details, ask for clarification rather than making assumptions. If you don't know the answer to a question, simply state that you don't know rather than making up information."
+    systemPrompt: "You are a creative article generator. Your primary task is to generate engaging article ideas and outlines. Focus on creating unique, interesting topics and well-structured outlines that will capture readers' attention."
   }
 ];
 
@@ -642,43 +643,48 @@ app.post('/api/chain/gemma-mistral-zephyr-llama3', async (req, res) => {
 });
 
 // Function to run the model chain
-async function runModelChain(topic) {
-  const gemmaPrompt = `List 5 angles for an article on: ${topic}`;
-  const gemma = await queryModel('gemma:2b', gemmaPrompt);
+const runModelChain = async (topic) => {
+  try {
+    // Step 1: Gemma - Ideas Generation
+    if (!sendEvent('modelStart', { model: 'gemma:2b', stage: 'ideas' })) {
+      throw new Error('Failed to start Gemma model');
+    }
+    const ideas = await queryModel('gemma:2b', `Generate 5 creative article ideas about: ${topic}`);
+    sendEvent('modelComplete', { model: 'gemma:2b', stage: 'ideas', result: ideas });
 
-  const mistralPrompt = `Pick one of the following ideas and create a structured outline with key arguments and examples:\n${gemma}`;
-  const mistral = await queryModel('mistral:latest', mistralPrompt);
+    // Step 2: Mistral - Research Outline
+    if (!sendEvent('modelStart', { model: 'mistral:latest', stage: 'outline' })) {
+      throw new Error('Failed to start Mistral model');
+    }
+    const outline = await queryModel('mistral:latest', `Create a detailed research outline for: ${topic}. Use the following ideas as inspiration: ${ideas}`);
+    sendEvent('modelComplete', { model: 'mistral:latest', stage: 'outline', result: outline });
 
-  const zephyrPrompt = `Transform this outline into a persuasive op-ed with emotional clarity and logical flow:\n${mistral}`;
-  const zephyr = await queryModel('zephyr-7b:latest', zephyrPrompt);
+    // Step 3: Zephyr - Content Generation
+    if (!sendEvent('modelStart', { model: 'zephyr-7b:latest', stage: 'content' })) {
+      throw new Error('Failed to start Zephyr model');
+    }
+    const content = await queryModel('zephyr-7b:latest', `Write a comprehensive article about: ${topic}. Follow this outline: ${outline}`);
+    sendEvent('modelComplete', { model: 'zephyr-7b:latest', stage: 'content', result: content });
 
-  const llama3Prompt = `You are a seasoned editorial writer.
+    // Step 4: Llama3 - Quality Check
+    if (!sendEvent('modelStart', { model: 'llama3:latest', stage: 'quality' })) {
+      throw new Error('Failed to start Llama3 model');
+    }
+    const qualityCheck = await queryModel('llama3:latest', `Review this article about ${topic} and provide feedback on its quality: ${content}`);
+    sendEvent('modelComplete', { model: 'llama3:latest', stage: 'quality', result: qualityCheck });
 
-Write an engaging op-ed based on the draft below. Improve clarity, structure, and tone. The final piece must:
-- Be **no more than 750 words**
-- Have a clear thesis and three supporting arguments
-- End with a memorable conclusion
-- Use persuasive language throughout
-- Use proper markdown formatting with headings, emphasis, and well-structured paragraphs
-
-Rewrite the following:
-
-${zephyr}`;
-
-  const llama3 = await queryModel('llama3:latest', llama3Prompt);
-  
-  // Post-process to ensure we don't exceed 750 words
-  const trimmedOutput = trimTo750Words(llama3);
-
-  // Optional: Add a quality check step
-  const qualityCheck = await performQualityCheck(trimmedOutput, topic);
-
-  return {
-    finalOutput: trimmedOutput,
-    stages: { gemma, mistral, zephyr, llama3: trimmedOutput },
-    qualityCheck
-  };
-}
+    sendEvent('complete', { topic, ideas, outline, content, qualityCheck });
+    return {
+      ideas,
+      outline,
+      content,
+      qualityCheck
+    };
+  } catch (error) {
+    console.error('Error in model chain:', error);
+    throw error;
+  }
+};
 
 // Function to trim text to 750 words
 function trimTo750Words(text) {
@@ -1016,3 +1022,75 @@ app.listen(PORT, () => {
     console.log(`- ${model.name} (${model.id}): ${model.description}`);
   });
 });
+
+export const checkModelAvailability = async (modelId) => {
+  try {
+    const tagsResponse = await axios.get(`${OLLAMA_API}/tags`);
+    const tags = tagsResponse.data.tags;
+    return tags.some(tag => tag.name === modelId);
+  } catch (error) {
+    console.error('Error checking model availability:', error);
+    return false;
+  }
+};
+
+export const getAvailableModels = async () => {
+  try {
+    const tagsResponse = await axios.get(`${OLLAMA_API}/tags`);
+    const tags = tagsResponse.data.tags;
+    
+    return models.map(model => ({
+      ...model,
+      available: tags.some(tag => tag.name === model.id)
+    }));
+  } catch (error) {
+    console.error('Error fetching available models:', error);
+    throw error;
+  }
+};
+
+export const getResponse = async (message, model) => {
+  try {
+    const response = await axios.post(`${OLLAMA_API}/generate`, {
+      model: model,
+      prompt: message,
+      temperature: 0.7,
+      max_tokens: 512,
+      stream: false
+    });
+    
+    return response.data.response;
+  } catch (error) {
+    console.error('Error getting response:', error);
+    throw error;
+  }
+};
+
+export const streamResponse = async (message, model, res) => {
+  try {
+    const response = await axios.post(`${OLLAMA_API}/generate`, {
+      model: model,
+      prompt: message,
+      temperature: 0.7,
+      max_tokens: 512,
+      stream: true
+    }, {
+      responseType: 'stream'
+    });
+    
+    response.data.on('data', (chunk) => {
+      const data = JSON.parse(chunk.toString());
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    });
+    
+    response.data.on('end', () => {
+      res.write('data: [DONE]\n\n');
+      res.end();
+    });
+  } catch (error) {
+    console.error('Error streaming response:', error);
+    throw error;
+  }
+};
+
+export { runModelChain };
