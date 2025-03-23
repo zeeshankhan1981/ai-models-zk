@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer } from 'http';
+import axios from 'axios';
 
 // Import api.js using CommonJS compatibility approach
 import pkg from './server/api.js';
@@ -22,14 +23,20 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // API Routes
-app.get('/api/models', (req, res) => {
-  res.json(models);
+app.get('/api/models', async (req, res) => {
+  try {
+    const response = await axios.get('http://localhost:3001/api/models');
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching models:', error);
+    res.status(500).json({ error: 'Failed to fetch models' });
+  }
 });
 
 app.get('/api/models/available', async (req, res) => {
   try {
-    const availableModels = await getAvailableModels();
-    res.json(availableModels);
+    const response = await axios.get('http://localhost:3001/api/models/check');
+    res.json(response.data);
   } catch (error) {
     console.error('Error fetching available models:', error);
     res.status(500).json({ error: 'Failed to fetch available models' });
