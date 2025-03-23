@@ -38,6 +38,100 @@ AverroesMind is a modern, elegant, and feature-rich interface for interacting wi
 - **Error Handling**: Robust error management with user-friendly messages
 - **Local Processing**: All data stays on your machine for complete privacy
 
+## System Architecture
+
+### Frontend
+- **Framework**: React 19.0.0 with Vite 6.2.0
+- **UI Components**: Custom-built with Tailwind CSS
+- **State Management**: React Context API
+- **Features**:
+  - Real-time streaming responses
+  - Model-specific prompt guides
+  - Persistent chat history
+  - Light/Dark theme support
+  - Responsive design
+
+### Backend
+- **Framework**: Express.js 4.18.2
+- **Language**: Node.js (ES Modules)
+- **API Endpoints**:
+  - `/api/models`: List available models
+  - `/api/models/available`: Check model availability
+  - `/api/chat`: Process chat messages
+  - `/api/stream`: Stream model responses
+  - `/api/chain`: Model chaining endpoint
+
+### Dependencies
+- **Frontend**:
+  - React 19.0.0
+  - React DOM 19.0.0
+  - React Router DOM 7.4.0
+  - Axios 1.8.4
+  - Framer Motion 12.5.0
+  - React Markdown 10.1.0
+  - React Syntax Highlighter 15.6.1
+
+- **Backend**:
+  - Express 4.18.2
+  - Axios 1.6.0
+  - CORS 2.8.5
+
+### Development Tools
+- **Build Tool**: Vite 6.2.0
+- **Plugin**: @vitejs/plugin-react 4.3.4
+- **ESLint**: 9.21.0
+- **TypeScript**: @types/react 19.0.10
+- **Node.js**: ES Modules (type: "module")
+
+## Server Configuration
+
+### Production Setup
+- **Web Server**: Nginx
+- **Process Manager**: PM2
+- **SSL**: Let's Encrypt
+- **Domain**: averroesmind.xyz
+- **Ports**:
+  - Frontend: 5173
+  - Backend: 3000
+  - API: 3001
+  - Ollama: 11434
+
+### Environment Variables
+```bash
+# .env file
+PORT=3000
+API_PORT=3001
+OLLAMA_URL=http://localhost:11434
+NODE_ENV=production
+```
+
+### Model Configuration
+- **Model Directory**: `modelfiles/`
+- **Supported Models**:
+  - Mistral:latest
+  - DeepSeek:latest
+  - StarCoder2:latest
+  - Zephyr-7b:latest
+  - Phi-2:latest
+  - MetaMath:latest
+  - Llama2:latest
+  - Llama3:latest
+  - Gemma:2b
+
+### System Requirements
+- **CPU**: Multi-core processor (Recommended: 8+ cores)
+- **RAM**: 16GB minimum, 32GB recommended
+- **Storage**: 250GB SSD minimum
+- **GPU**: Optional for enhanced performance
+- **Network**: Stable internet connection for model downloads
+
+### Security Features
+- **Data Privacy**: All processing happens locally
+- **Rate Limiting**: Built-in protection against abuse
+- **Input Validation**: Comprehensive validation of user inputs
+- **Error Handling**: Robust error management
+- **Logging**: Secure logging system
+
 ## Architecture
 
 AverroesMind consists of two main components:

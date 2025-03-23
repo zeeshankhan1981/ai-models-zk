@@ -11,6 +11,10 @@
   contain: layout;
 }
 
+[data-theme="dark"] .chat-container {
+  background-color: var(--bg-primary-dark);
+}
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -26,6 +30,11 @@
   will-change: transform; /* Optimize for scrolling performance */
   contain: content; /* Improve scrolling performance */
   contain: layout;
+  background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .chat-messages {
+  background-color: var(--bg-primary-dark);
 }
 
 .chat-messages::-webkit-scrollbar {
@@ -46,6 +55,18 @@
   background: var(--text-secondary);
 }
 
+[data-theme="dark"] .chat-messages::-webkit-scrollbar-track {
+  background: var(--bg-secondary-dark);
+}
+
+[data-theme="dark"] .chat-messages::-webkit-scrollbar-thumb {
+  background: var(--border-color-dark);
+}
+
+[data-theme="dark"] .chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary-dark);
+}
+
 .message {
   display: flex;
   flex-direction: column;
@@ -58,14 +79,27 @@
   box-shadow: none;
   border: none;
   contain: content; /* Improve rendering performance */
+  background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .message {
+  background-color: var(--bg-primary-dark);
 }
 
 .user-message {
   background: var(--bg-secondary);
 }
 
+[data-theme="dark"] .user-message {
+  background: var(--bg-secondary-dark);
+}
+
 .assistant-message {
   background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .assistant-message {
+  background-color: var(--bg-primary-dark);
 }
 
 .system-message {
@@ -399,6 +433,39 @@ input:checked + .toggle-slider {
 
 input:checked + .toggle-slider:before {
   transform: translateX(16px);
+}
+
+/* Dark mode specific styles */
+[data-theme="dark"] .chat-container {
+  background-color: var(--bg-primary-dark);
+}
+
+[data-theme="dark"] .chat-messages {
+  background-color: var(--bg-primary-dark);
+}
+
+[data-theme="dark"] .message {
+  background-color: var(--bg-primary-dark);
+}
+
+[data-theme="dark"] .user-message {
+  background: var(--bg-secondary-dark);
+}
+
+[data-theme="dark"] .assistant-message {
+  background-color: var(--bg-primary-dark);
+}
+
+[data-theme="dark"] .chat-messages::-webkit-scrollbar-track {
+  background: var(--bg-secondary-dark);
+}
+
+[data-theme="dark"] .chat-messages::-webkit-scrollbar-thumb {
+  background: var(--border-color-dark);
+}
+
+[data-theme="dark"] .chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary-dark);
 }
 
 @keyframes fadeIn {
