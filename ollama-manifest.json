@@ -1,0 +1,373 @@
+{
+  "models": {
+    "mistral:latest": {
+      "type": "llm",
+      "path": "mistral:latest",
+      "size": 4100000000,
+      "description": "Mistral AI's large language model optimized for code and general tasks",
+      "capabilities": [
+        "code_generation",
+        "text_completion",
+        "chat",
+        "reasoning"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 4096
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    },
+    "phi-2:latest": {
+      "type": "llm",
+      "path": "phi-2:latest",
+      "size": 1800000000,
+      "description": "A smaller, efficient model for general tasks",
+      "capabilities": [
+        "text_completion",
+        "chat",
+        "reasoning"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 2048
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    },
+    "llama2:latest": {
+      "type": "llm",
+      "path": "llama2:latest",
+      "size": 3800000000,
+      "description": "Meta's LLaMA 2 model for general tasks",
+      "capabilities": [
+        "text_completion",
+        "chat",
+        "reasoning",
+        "code_generation"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 4096
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    },
+    "codellama:7b-code": {
+      "type": "llm",
+      "path": "codellama:7b-code",
+      "size": 7000000000,
+      "description": "Code-focused version of LLaMA for code generation",
+      "capabilities": [
+        "code_generation",
+        "code_completion",
+        "code_review"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 4096
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    },
+    "starcoder:latest": {
+      "type": "llm",
+      "path": "starcoder:latest",
+      "size": 1800000000,
+      "description": "Specialized code generation model",
+      "capabilities": [
+        "code_generation",
+        "code_completion"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 2048
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    },
+    "llama3:latest": {
+      "type": "llm",
+      "path": "llama3:latest",
+      "size": 4700000000,
+      "description": "Advanced version of LLaMA with improved capabilities",
+      "capabilities": [
+        "text_completion",
+        "chat",
+        "reasoning",
+        "code_generation"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 4096
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    },
+    "gemma:2b": {
+      "type": "llm",
+      "path": "gemma:2b",
+      "size": 1700000000,
+      "description": "Smaller model specialized for general tasks",
+      "capabilities": [
+        "text_completion",
+        "chat"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 2048
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    },
+    "starcoder2:latest": {
+      "type": "llm",
+      "path": "starcoder2:latest",
+      "size": 1700000000,
+      "description": "Updated version of StarCoder with improved capabilities",
+      "capabilities": [
+        "code_generation",
+        "code_completion"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 2048
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    },
+    "zephyr-7b:latest": {
+      "type": "llm",
+      "path": "zephyr-7b:latest",
+      "size": 4400000000,
+      "description": "High-performance model for general tasks",
+      "capabilities": [
+        "text_completion",
+        "chat",
+        "reasoning"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 4096
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    },
+    "deepseek:latest": {
+      "type": "llm",
+      "path": "deepseek:latest",
+      "size": 1600000000,
+      "description": "Model optimized for search and retrieval tasks",
+      "capabilities": [
+        "text_completion",
+        "search",
+        "retrieval"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 2048
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    },
+    "metamath:latest": {
+      "type": "llm",
+      "path": "metamath:latest",
+      "size": 4400000000,
+      "description": "Specialized for mathematical reasoning",
+      "capabilities": [
+        "math_reasoning",
+        "problem_solving"
+      ],
+      "parameters": {
+        "temperature": {
+          "default": 0.7,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "top_p": {
+          "default": 0.9,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "default": 1000,
+          "min": 1,
+          "max": 4096
+        }
+      },
+      "config": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 1000
+      }
+    }
+  },
+  "system": {
+    "cpu_threads": 14,
+    "memory_limit": 48000000000,
+    "node_memory_limit": 8000000000,
+    "gpu_acceleration": false,
+    "platform": "amd64"
+  }
+}

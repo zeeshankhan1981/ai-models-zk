@@ -18,18 +18,19 @@ if ! curl -s http://localhost:11434/api/tags &> /dev/null; then
     sleep 5
 fi
 
-# Start backend server
+# Start the server with PM2
 echo "Starting backend server..."
-cd server
-node api.js &
+pm2 start server.mjs --name "averroesmind" --watch --max-memory-restart 48G --node-args="--experimental-modules"
 BACKEND_PID=$!
-cd ..
+
+# Start the Ollama models
+./start_models.sh
 
 # Wait for backend to start
 echo "Waiting for backend to start..."
-sleep 3
+sleep 5
 
-# Start frontend
+# Start the frontend
 echo "Starting frontend..."
 npm run dev
 
