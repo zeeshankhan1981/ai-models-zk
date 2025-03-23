@@ -1,6 +1,6 @@
-# AverroesMind Deployment Guide
+# Averroes Deployment Guide
 
-This guide provides detailed instructions for deploying AverroesMind in production.
+This guide provides detailed instructions for deploying Averroes in production.
 
 ## Prerequisites
 
@@ -80,14 +80,14 @@ npm install
 Create a new Nginx configuration file:
 
 ```bash
-sudo cp nginx-config.conf /etc/nginx/sites-available/averroesmind
-sudo ln -s /etc/nginx/sites-available/averroesmind /etc/nginx/sites-enabled/
+sudo cp nginx-config.conf /etc/nginx/sites-available/averroes
+sudo ln -s /etc/nginx/sites-available/averroes /etc/nginx/sites-enabled/
 ```
 
 ### 6. Set Up SSL
 
 ```bash
-sudo certbot --nginx -d averroesmind.xyz
+sudo certbot --nginx -d averroes.xyz
 ```
 
 ### 7. Pull Required Models
@@ -111,10 +111,10 @@ ollama pull gemma:2b
 ollama serve &
 
 # Start backend with PM2
-pm2 start server.js --name averroesmind-backend
+pm2 start server.js --name averroes-backend
 
 # Start frontend
-pm2 start npm --name averroesmind-frontend -- start
+pm2 start npm --name averroes-frontend -- start
 
 # Save PM2 configuration
 pm2 save
@@ -125,10 +125,10 @@ pm2 save
 Create a systemd service file:
 
 ```bash
-sudo cp averroesmind.service /etc/systemd/system/
+sudo cp averroes.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable averroesmind
-sudo systemctl start averroesmind
+sudo systemctl enable averroes
+sudo systemctl start averroes
 ```
 
 ## Monitoring and Maintenance
@@ -137,10 +137,10 @@ sudo systemctl start averroesmind
 
 ```bash
 # View backend logs
-pm2 logs averroesmind-backend
+pm2 logs averroes-backend
 
 # View frontend logs
-pm2 logs averroesmind-frontend
+pm2 logs averroes-frontend
 
 # View Nginx logs
 sudo tail -f /var/log/nginx/error.log
@@ -197,10 +197,10 @@ pm2 status
 sudo tail -f /var/log/nginx/error.log
 
 # View backend error logs
-pm2 logs averroesmind-backend --lines 100
+pm2 logs averroes-backend --lines 100
 
 # View frontend error logs
-pm2 logs averroesmind-frontend --lines 100
+pm2 logs averroes-frontend --lines 100
 ```
 
 ## Security Best Practices

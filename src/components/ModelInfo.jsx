@@ -44,7 +44,7 @@ const ModelInfo = ({ model }) => {
     >
       <div className="model-info-header" onClick={() => setExpanded(!expanded)}>
         <div className="model-info-title">
-          <h2 className="model-info-name">{model.name}</h2>
+          <h3 className="model-info-name">{model.name}</h3>
           <span className={`gpu-badge ${model.requiresGPU ? 'gpu-required' : 'cpu-only'}`}>
             {model.requiresGPU ? 'GPU' : 'CPU'}
           </span>

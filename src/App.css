@@ -89,10 +89,7 @@ body {
   padding: 1.25rem 2rem;
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--header-shadow);
   z-index: 10;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
 }
@@ -102,22 +99,11 @@ body {
   flex-direction: column;
 }
 
-.app-title h1 {
-  font-size: 2rem;
-  font-weight: 700;
+.app-title h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
   margin: 0;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  letter-spacing: -0.5px;
-}
-
-.app-subtitle {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  margin-top: 0.25rem;
+  color: var(--text-primary);
 }
 
 .app-controls {
@@ -162,7 +148,7 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-.error-container h2 {
+.error-container h3 {
   color: #e53e3e;
   margin-bottom: 1rem;
 }

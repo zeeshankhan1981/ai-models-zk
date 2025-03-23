@@ -1,7 +1,6 @@
 .prompt-guide-container {
   margin-top: 1rem;
   padding: 1rem;
-  border-radius: 8px;
   background-color: var(--card-bg);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   max-height: 0;
@@ -22,6 +21,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
 }
 
 .prompt-guide-title {

@@ -83,8 +83,7 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1>AverroesMind</h1>
-          <span className="app-subtitle">Your personal AI hub</span>
+          <h3>Averroes</h3>
         </motion.div>
         
         <div className="app-controls">
@@ -108,7 +107,7 @@ function App() {
           </div>
         ) : error ? (
           <div className="error-container">
-            <h2>Error</h2>
+            <h3>Error</h3>
             <p>{error}</p>
             <button onClick={() => window.location.reload()}>Retry</button>
           </div>

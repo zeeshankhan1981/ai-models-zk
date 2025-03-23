@@ -120,7 +120,7 @@ const server = createServer(app);
 
 // Start server
 server.listen(PORT, () => {
-  console.log(`AverroesMind server running on port ${PORT}`);
+  console.log(`Averroes server running on port ${PORT}`);
   console.log(`Access the application at http://localhost:${PORT}`);
 });
 

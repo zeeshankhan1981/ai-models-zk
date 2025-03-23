@@ -1,5 +1,5 @@
 [Unit]
-Description=AverroesMind - Multi-Model AI Chat Interface
+Description=Averroes - Multi-Model AI Chat Interface
 After=network.target ollama.service
 
 [Service]

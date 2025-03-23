@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Initialize Docker deployment for AverroesMind
+# Initialize Docker deployment for Averroes
 # This script sets up the necessary directories and configurations for Docker deployment
 
 # Exit on any error
 set -e
 
-echo "🚀 Initializing Docker deployment for AverroesMind..."
+echo "🚀 Initializing Docker deployment for Averroes..."
 
 # Create required directories
 echo "📁 Creating required directories..."
@@ -18,7 +18,7 @@ mkdir -p logs
 
 # Check if domain is provided
 if [ -z "$1" ]; then
-  DOMAIN="averroesmind.xyz"
+  DOMAIN="averroes.xyz"
 else
   DOMAIN=$1
 fi
@@ -47,7 +47,7 @@ server {
     }
     
     location / {
-        return 200 'AverroesMind is being set up!';
+        return 200 'Averroes is being set up!';
         add_header Content-Type text/plain;
     }
 }
@@ -98,7 +98,7 @@ docker-compose up certbot
 
 # Replace the temporary Nginx config with the real one
 echo "⚙️ Updating Nginx configuration..."
-cp nginx/conf.d/averroesmind.conf nginx/conf.d/init.conf
+cp nginx/conf.d/averroes.conf nginx/conf.d/init.conf
 
 # Start all services
 echo "🚀 Starting all services..."

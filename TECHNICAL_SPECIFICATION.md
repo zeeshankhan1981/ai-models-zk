@@ -1,9 +1,9 @@
-# AverroesMind Technical Specification
+# Averroes Technical Specification
 
 ## 1. Architecture Overview
 
 ### 1.1 System Architecture
-AverroesMind is a web-based AI model playground that allows users to interact with multiple local AI models through a web interface. The system is built using a modern microservices architecture with clear separation of concerns between the frontend, backend, and AI model services.
+Averroes is a web-based AI model playground that allows users to interact with multiple local AI models through a web interface. The system is built using a modern microservices architecture with clear separation of concerns between the frontend, backend, and AI model services.
 
 ### 1.2 Technology Stack
 

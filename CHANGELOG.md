@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the AverroesMind Multi-Model LLM Playground will be documented in this file.
+All notable changes to the Averroes Multi-Model LLM Playground will be documented in this file.
 
 ## [v3.0.0] - 2025-03-22
 

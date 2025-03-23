@@ -1,6 +1,6 @@
-# AverroesMind Multi-Environment Deployment Guide
+# Averroes Multi-Environment Deployment Guide
 
-This guide provides detailed instructions for deploying AverroesMind with multiple environments (development and test) on a baremetal server.
+This guide provides detailed instructions for deploying Averroes with multiple environments (development and test) on a baremetal server.
 
 ## Prerequisites
 
@@ -52,31 +52,31 @@ sudo apt install -y ollama
 git clone https://github.com/zeeshankhan1981/ai-models-zk.git
 
 # Set up development environment
-mkdir -p /opt/averroesmind-dev
-ln -s /path/to/repo /opt/averroesmind-dev
+mkdir -p /opt/averroes-dev
+ln -s /path/to/repo /opt/averroes-dev
 
 # Set up test environment
-mkdir -p /opt/averroesmind-test
-ln -s /path/to/repo /opt/averroesmind-test
+mkdir -p /opt/averroes-test
+ln -s /path/to/repo /opt/averroes-test
 ```
 
 ### 3. Configure Nginx for Development Environment
 
-Create `/etc/nginx/sites-available/dev.averroesmind.xyz`:
+Create `/etc/nginx/sites-available/dev.averroes.xyz`:
 
 ```nginx
 server {
     listen 80;
-    server_name dev.averroesmind.xyz;
+    server_name dev.averroes.xyz;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name dev.averroesmind.xyz;
+    server_name dev.averroes.xyz;
 
-    ssl_certificate /etc/letsencrypt/live/dev.averroesmind.xyz/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/dev.averroesmind.xyz/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/dev.averroes.xyz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dev.averroes.xyz/privkey.pem;
 
     location / {
         proxy_pass http://127.0.0.1:5173;
@@ -86,21 +86,21 @@ server {
 
 ### 4. Configure Nginx for Test Environment
 
-Create `/etc/nginx/sites-available/test.averroesmind.xyz`:
+Create `/etc/nginx/sites-available/test.averroes.xyz`:
 
 ```nginx
 server {
     listen 80;
-    server_name test.averroesmind.xyz;
+    server_name test.averroes.xyz;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name test.averroesmind.xyz;
+    server_name test.averroes.xyz;
 
-    ssl_certificate /etc/letsencrypt/live/dev.averroesmind.xyz/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/dev.averroesmind.xyz/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/dev.averroes.xyz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dev.averroes.xyz/privkey.pem;
 
     location / {
         proxy_pass http://127.0.0.1:5174;
@@ -111,22 +111,22 @@ server {
 ### 5. Enable Nginx Configurations
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/dev.averroesmind.xyz /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/test.averroesmind.xyz /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/dev.averroes.xyz /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/test.averroes.xyz /etc/nginx/sites-enabled/
 ```
 
 ### 6. Set Up SSL Certificates
 
 ```bash
 # Obtain SSL certificates for both domains
-sudo certbot --nginx -d dev.averroesmind.xyz -d test.averroesmind.xyz --non-interactive --agree-tos --email admin@averroesmind.xyz
+sudo certbot --nginx -d dev.averroes.xyz -d test.averroes.xyz --non-interactive --agree-tos --email admin@averroes.xyz
 ```
 
 ### 7. Start Development Environment
 
 ```bash
 # Navigate to development environment
-cd /opt/averroesmind-dev
+cd /opt/averroes-dev
 
 # Install dependencies
 npm install
@@ -139,7 +139,7 @@ npm run dev &
 
 ```bash
 # Navigate to test environment
-cd /opt/averroesmind-test
+cd /opt/averroes-test
 
 # Install dependencies
 npm install
@@ -152,16 +152,16 @@ npm run dev &
 
 ```bash
 # Navigate to development environment
-cd /opt/averroesmind-dev
+cd /opt/averroes-dev
 
 # Start development environment with PM2
-pm2 start npm --name averroesmind-dev -- start
+pm2 start npm --name averroes-dev -- start
 
 # Navigate to test environment
-cd /opt/averroesmind-test
+cd /opt/averroes-test
 
 # Start test environment with PM2
-pm2 start npm --name averroesmind-test -- start
+pm2 start npm --name averroes-test -- start
 
 # Save PM2 configuration
 pm2 save
@@ -185,8 +185,8 @@ sudo certbot certificates
 
 ## Accessing the Environments
 
-- Development Environment: https://dev.averroesmind.xyz
-- Test Environment: https://test.averroesmind.xyz
+- Development Environment: https://dev.averroes.xyz
+- Test Environment: https://test.averroes.xyz
 
 ## Troubleshooting
 
@@ -198,7 +198,7 @@ sudo certbot certificates
    - Ensure SSL certificates are valid
 
 2. **Service Not Starting**
-   - Check PM2 logs: `pm2 logs averroesmind-dev` and `pm2 logs averroesmind-test`
+   - Check PM2 logs: `pm2 logs averroes-dev` and `pm2 logs averroes-test`
    - Verify ports are not blocked
    - Check firewall rules
 
@@ -224,6 +224,5 @@ sudo certbot certificates
 
 # Check PM2 processes
 pm2 status
-pm2 logs averroesmind-dev
-pm2 logs averroesmind-test
-```
+pm2 logs averroes-dev
+pm2 logs averroes-test

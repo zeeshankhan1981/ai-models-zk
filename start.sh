@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# Start LocalMind - Your Personal AI Hub
-
-echo "Starting LocalMind..."
+# Start LocalMind
 
 # Check if Ollama is installed
 if ! command -v ollama &> /dev/null; then

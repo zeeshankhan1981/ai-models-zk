@@ -1,13 +1,7 @@
 .model-info {
   background-color: var(--bg-secondary);
-  border-radius: 1rem;
-  box-shadow: var(--card-shadow);
-  animation: fadeIn 0.3s ease-out;
   border: 1px solid var(--border-color);
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 1rem;
-  transition: all 0.3s ease;
+  padding: 1rem;
 }
 
 .model-info.collapsed {
@@ -20,7 +14,6 @@
 
 .model-info:hover {
   transform: translateY(-2px);
-  box-shadow: var(--card-shadow-hover);
 }
 
 @keyframes fadeIn {
@@ -42,25 +35,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
-  user-select: none;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
 }
 
 .model-info-title {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .model-info-name {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
   margin: 0;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  letter-spacing: -0.5px;
+  color: var(--text-primary);
 }
 
 .model-info .gpu-badge {
@@ -103,6 +93,8 @@
 
 .model-info-details {
   overflow: hidden;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border-color);
 }
 
 .model-info-description {

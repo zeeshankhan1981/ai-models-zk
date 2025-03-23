@@ -1,8 +1,8 @@
-# AverroesMind - Multi-Model AI Chat Interface
+# Averroes - Multi-Model AI Chat Interface
 
-AverroesMind is a modern, elegant, and feature-rich interface for interacting with multiple Ollama models on your local machine. It provides a seamless way to chat with different AI models, compare their responses, and leverage their unique capabilities - all while keeping your data private and secure on your own hardware.
+Averroes is a modern, elegant, and feature-rich interface for interacting with multiple Ollama models on your local machine. It provides a seamless way to chat with different AI models, compare their responses, and leverage their unique capabilities - all while keeping your data private and secure on your own hardware.
 
-![AverroesMind Screenshot](screenshot.png)
+![Averroes Screenshot](screenshot.png)
 
 ## Features
 
@@ -89,7 +89,7 @@ AverroesMind is a modern, elegant, and feature-rich interface for interacting wi
 - **Web Server**: Nginx
 - **Process Manager**: PM2
 - **SSL**: Let's Encrypt
-- **Domain**: averroesmind.xyz
+- **Domain**: averroes.xyz
 - **Ports**:
   - Frontend: 5173
   - Backend: 3000
@@ -134,7 +134,7 @@ NODE_ENV=production
 
 ## Architecture
 
-AverroesMind consists of two main components:
+Averroes consists of two main components:
 
 1. **Frontend**: A React application built with Vite that provides the user interface
 2. **Backend**: An Express.js API server that communicates with Ollama
