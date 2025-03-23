@@ -66,6 +66,29 @@ ai-models-zk/
 └── modelfiles/      # Local models
 ```
 
+### 3.3 Design System
+
+#### 3.3.1 Visual Style
+- **Design Philosophy**: Flat design with minimal shadows and gradients
+- **Color Palette**: Professional blue accent (#007bff) with neutral grays
+- **Typography**: Inter font family with clear hierarchy
+- **Spacing**: Consistent use of 8px grid system
+- **Borders**: Subtle 1px borders for separation
+- **Shadows**: Light shadows for depth without overwhelming effects
+
+#### 3.3.2 Component Library
+- **Cards**: Flat backgrounds with subtle borders
+- **Buttons**: Minimalist design with hover states
+- **Inputs**: Clean, flat design with focus states
+- **Messages**: Distinct user and assistant messages with clear separation
+- **Selectors**: Simple, clickable items with hover effects
+
+#### 3.3.3 Responsive Design
+- **Mobile First**: All components designed for mobile first
+- **Flexible Layout**: Components adjust based on screen size
+- **Touch Friendly**: Interactive elements optimized for touch
+- **Performance**: Optimized for fast loading and smooth interactions
+
 ## 4. API Specification
 
 ### 4.1 REST API Endpoints
